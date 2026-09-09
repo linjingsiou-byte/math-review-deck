@@ -14,6 +14,11 @@
 
   let idx = 0;
 
+  function renderTitle(str) {
+    if (!str) return '';
+    return str.replace(/\\?\(\\?\s*\\frac\{([^}]+)\}\{([^}]+)\}\s*\\?\)/g, (_, n, d) => `<span class="mfrac"><span class="num">${n}</span><span class="den">${d}</span></span>`);
+  }
+
   // ---- MathJax 排版（載入前先重試，載入後自動補排版）----
   function typeset(el, tries = 0) {
     if (window.MathJax && MathJax.typesetPromise) {
@@ -28,11 +33,13 @@
   function fitEl(box, content) {
     if (!box || !content) return;
     content.style.transform = 'none';
-    const avail = box.clientHeight;
+    content.style.transformOrigin = 'center top';
+    const comp = window.getComputedStyle(box);
+    const pad = parseFloat(comp.paddingTop || 0) + parseFloat(comp.paddingBottom || 0);
+    const avail = box.clientHeight - pad;
     const need = content.scrollHeight;
-    // 留 6px 安全邊界，吸收縮放後的次像素捨入，避免滑桿底緣被裁掉一絲
     if (avail > 0 && need > avail + 1) {
-      content.style.transform = 'scale(' + Math.max(0.5, (avail - 6) / need) + ')';
+      content.style.transform = 'scale(' + Math.max(0.5, (avail - 4) / need) + ')';
     }
   }
   function fitSlide() {
@@ -42,9 +49,7 @@
     const vis = slideEl.querySelector('.slide-visual');
     if (vis) {
       const host = vis.querySelector('.visual-host');
-      // 視覺欄一律等比縮放：把「圖＋滑桿／按鈕」當成一整組縮到欄內，
-      // 確保矮螢幕下滑桿也不會被裁掉或被推到看不見（原本只縮靜態圖，互動頁會爆版）
-      if (host) fitEl(host, host);
+      if (host) fitEl(vis, host);
     }
   }
   // MathJax 排版完成後才量高縮放（公式高度需排版後才確定）
@@ -203,7 +208,7 @@
         const b = document.createElement('button');
         b.className = 'toc-item';
         b.dataset.i = i;
-        b.innerHTML = `<span class="ti-sec">${s.sec}</span>${s.title}`;
+        b.innerHTML = `<span class="ti-sec">${s.sec}</span>${renderTitle(s.title)}`;
         b.onclick = () => { go(i); if (window.innerWidth <= 1080) tocEl.classList.remove('open'); };
         items.appendChild(b);
       });
@@ -228,17 +233,17 @@
       slideEl.innerHTML = `
         <div>
           <div class="dv-num">第 ${s.ch} 章</div>
-          <div class="dv-title">${s.title}</div>
+          <div class="dv-title">${renderTitle(s.title)}</div>
           <div class="dv-list">${s.sections.map(x => `<span class="dv-chip">${x}</span>`).join('')}</div>
         </div>`;
-      crumbEl.innerHTML = `第 ${s.ch} 章　<b>${s.title}</b>`;
+      crumbEl.innerHTML = `第 ${s.ch} 章　<b>${renderTitle(s.title)}</b>`;
     } else {
       slideEl.className = 'slide';
       // 左：概念欄
       const info = document.createElement('div');
       info.className = 'slide-info';
       let html = `<div class="badge">第 ${s.ch} 章 · ${s.sec} ${s.secName || ''}</div>
-        <h2 class="slide-title">${s.title}</h2>`;
+        <h2 class="slide-title">${renderTitle(s.title)}</h2>`;
       if (s.formula) {
         html += `<div class="formula">${s.formula.label ? `<div class="formula-label">${s.formula.label}</div>` : ''}$$${s.formula.tex}$$</div>`;
       }
@@ -305,7 +310,7 @@
       const exZoom = info.querySelector('.ex-zoom');
       if (exZoom) exZoom.onclick = () => openExampleModal(s);
 
-      crumbEl.innerHTML = `第 ${s.ch} 章 · ${s.sec} <b>${s.title}</b>`;
+      crumbEl.innerHTML = `第 ${s.ch} 章 · ${s.sec} <b>${renderTitle(s.title)}</b>`;
     }
 
     // 進度

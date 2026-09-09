@@ -14,6 +14,11 @@
 
   let idx = 0;
 
+  function renderTitle(str) {
+    if (!str) return '';
+    return str.replace(/\\?\(\\?\s*\\frac\{([^}]+)\}\{([^}]+)\}\s*\\?\)/g, (_, n, d) => `<span class="mfrac"><span class="num">${n}</span><span class="den">${d}</span></span>`);
+  }
+
   // ---- MathJax 排版（載入前先重試，載入後自動補排版）----
   function typeset(el, tries = 0) {
     if (window.MathJax && MathJax.typesetPromise) {
@@ -203,7 +208,7 @@
         const b = document.createElement('button');
         b.className = 'toc-item';
         b.dataset.i = i;
-        b.innerHTML = `<span class="ti-sec">${s.sec}</span>${s.title}`;
+        b.innerHTML = `<span class="ti-sec">${s.sec}</span>${renderTitle(s.title)}`;
         b.onclick = () => { go(i); if (window.innerWidth <= 1080) tocEl.classList.remove('open'); };
         items.appendChild(b);
       });
@@ -228,17 +233,17 @@
       slideEl.innerHTML = `
         <div>
           <div class="dv-num">第 ${s.ch} 章</div>
-          <div class="dv-title">${s.title}</div>
+          <div class="dv-title">${renderTitle(s.title)}</div>
           <div class="dv-list">${s.sections.map(x => `<span class="dv-chip">${x}</span>`).join('')}</div>
         </div>`;
-      crumbEl.innerHTML = `第 ${s.ch} 章　<b>${s.title}</b>`;
+      crumbEl.innerHTML = `第 ${s.ch} 章　<b>${renderTitle(s.title)}</b>`;
     } else {
       slideEl.className = 'slide';
       // 左：概念欄
       const info = document.createElement('div');
       info.className = 'slide-info';
       let html = `<div class="badge">第 ${s.ch} 章 · ${s.sec} ${s.secName || ''}</div>
-        <h2 class="slide-title">${s.title}</h2>`;
+        <h2 class="slide-title">${renderTitle(s.title)}</h2>`;
       if (s.formula) {
         html += `<div class="formula">${s.formula.label ? `<div class="formula-label">${s.formula.label}</div>` : ''}$$${s.formula.tex}$$</div>`;
       }
@@ -305,7 +310,7 @@
       const exZoom = info.querySelector('.ex-zoom');
       if (exZoom) exZoom.onclick = () => openExampleModal(s);
 
-      crumbEl.innerHTML = `第 ${s.ch} 章 · ${s.sec} <b>${s.title}</b>`;
+      crumbEl.innerHTML = `第 ${s.ch} 章 · ${s.sec} <b>${renderTitle(s.title)}</b>`;
     }
 
     // 進度

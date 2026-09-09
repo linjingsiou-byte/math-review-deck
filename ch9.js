@@ -96,7 +96,7 @@ window.DECK = window.DECK || [];
       {
         sec: '9-1',
         secName: '幾分之幾（一）',
-        title: '4個 \\(\\frac{1}{4}\\) 就是 \\(\\frac{4}{4}\\)，等於 1 個整體',
+        title: `4個 ${hFrac(1, 4)} 就是 ${hFrac(4, 4)}，等於 1 個整體`,
         points: [
           '4 片 \\(\\frac{1}{4}\\) 張蔥油餅合起來是 <span class="k">\\(\\frac{4}{4}\\) 張</span>。',
           '\\(\\frac{4}{4}\\) 張蔥油餅就是 <span class="k">1 張完整的蔥油餅</span>（\\(\\frac{4}{4} = 1\\)）。'
@@ -138,7 +138,7 @@ window.DECK = window.DECK || [];
       {
         sec: '9-2',
         secName: '幾分之幾（二）',
-        title: '離散量：一盒有10個果凍，3個就是 \\(\\frac{3}{10}\\) 盒',
+        title: `離散量：一盒有10個果凍，3個就是 ${hFrac(3, 10)} 盒`,
         points: [
           '一盒果凍有 10 個，1 個是 <span class="k">\\(\\frac{1}{10}\\) 盒</span>。',
           '大寶吃了 3 個果凍，是吃了 <span class="k">\\(\\frac{3}{10}\\) 盒果凍</span>。'
@@ -255,7 +255,7 @@ window.DECK = window.DECK || [];
       {
         sec: '9-3',
         secName: '分數的數線與序列',
-        title: '分數數線：從 \\(\\frac{1}{10}\\) 到 \\(\\frac{10}{10}\\)（等於1）',
+        title: `分數數線：從 ${hFrac(1, 10)} 到 ${hFrac(10, 10)}（等於1）`,
         points: [
           '分數可以在數線上標示刻度與位置。',
           '\\(\\frac{1}{10}, \\frac{2}{10}, \\frac{3}{10} \\dots \\frac{10}{10}\\)，最右端 <span class="k">\\(\\frac{10}{10} = 1\\) 公尺</span>。'
