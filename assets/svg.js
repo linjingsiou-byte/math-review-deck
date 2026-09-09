@@ -240,6 +240,8 @@ const SV = (() => {
     }
     out += `</g>`;
     return out;
+  };
+
   // 3.5 2D 向量 SVG 垂直分數（可在 SVG 內部直接繪製真分數）
   const fracSVG = (x, y, num, den, opt = {}) => {
     const fs = opt.fs || 12;
