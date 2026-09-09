@@ -102,14 +102,17 @@ SV.stepper(h, '0 0 440 300', [
 | `SV.fractionPie(opt)` | 分數圓形派切分圖。`opt={cx, cy, r, total, parts, colors}` |
 | `SV.placeValueTable(opt)` | 位值對齊板。`opt={x, y, w, h, cols:['千','百','十','個'], rows:[['2','5','0','8']], color}` |
 | `SV.verticalMath(opt)` | 直式運算板。`opt={x, y, op:'+', num1:'358', num2:'265', ans:'623', carries:[{pos:1,val:'1'}]}` |
-| `SV.baseTenBlocks(opt)` | 十進位積木組（百格板/十格棒/積木塊）。`opt={x, y, hundreds:1, tens:2, units:5, color}` |
+| `SV.baseTenBlocks(opt)` | 3D 十進位積木組。`opt={x, y, thousands:1, hundreds:2, tens:5, units:3, color}` |
+| `SV.cube1000(opt)` | 3D 立體千格積木（10x10x10 正方體）。`opt={x, y, s:80, color}` |
+| `SV.flat100(opt)` | 3D 立體百格板（10x10 正方薄板）。`opt={x, y, s:70, color, thick:8}` |
+| `SV.hundredToThousandStack(opt)` | **百格板 ➔ 千格積木動態堆疊合體**。`n` 從 1~9 為 3D 百格板階梯堆疊，`n=10` 自動變身為 3D 千格大積木並顯示合體標籤！ `opt={x, y, n, s, color}` |
 
 ```js
 // 範例 1：顯示 10 點 25 分的鐘面
 SV.clock({ cx: 160, cy: 140, r: 90, hour: 10, minute: 25 });
 
-// 範例 2：顯示 8 等份中塗色 3 份的分數條形圖
-SV.fractionBar({ x: 20, y: 40, w: 340, h: 45, total: 8, parts: 3 });
+// 範例 2：拖動 N 個百格板堆疊合體成千格積木 (1~10)
+SV.hundredToThousandStack({ x: 30, y: 75, n: n, s: 75, color: '#2563eb' });
 
 // 範例 3：直式加法（包含百位進位標記）
 SV.verticalMath({ x: 120, y: 30, op: '+', num1: '382', num2: '245', ans: '627', carries: [{pos: 2, val: '1'}] });

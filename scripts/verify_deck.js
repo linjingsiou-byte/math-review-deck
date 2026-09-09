@@ -141,6 +141,9 @@ const SVstub = {
   placeValueTable: () => '<g class="place-value-table"></g>',
   verticalMath: () => '<g class="vertical-math"></g>',
   baseTenBlocks: () => '<g class="base-ten-blocks"></g>',
+  cube1000: () => '<g class="cube1000"></g>',
+  flat100: () => '<g class="flat100"></g>',
+  hundredToThousandStack: () => '<g class="ht-stack"></g>',
 };
 
 /* ---------- 逐檔載入 ---------- */
