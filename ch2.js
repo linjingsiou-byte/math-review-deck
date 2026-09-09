@@ -26,24 +26,24 @@ window.DECK = window.DECK || [];
     </g>`;
   }
 
-  // 2. 十位長條積木 (12x60, 內含10小格)
+  // 2. 十位長條積木 (14x60, 獨立邊框與清晰10刻度，防止多條連在一起看不清數量)
   function drawTenRod(x, y, color = '#7c3aed') {
     let out = `<g transform="translate(${x},${y})">
-      <rect width="12" height="60" rx="2" fill="${color}" stroke="#5b21b6" stroke-width="1.2"/>`;
+      <rect width="13" height="60" rx="3" fill="${color}" stroke="#3b0764" stroke-width="1.5"/>`;
     for (let i = 1; i < 10; i++) {
-      out += `<line x1="1" y1="${i * 6}" x2="11" y2="${i * 6}" stroke="#ffffff" stroke-width="0.8" opacity="0.6"/>`;
+      out += `<line x1="1" y1="${i * 6}" x2="12" y2="${i * 6}" stroke="#ffffff" stroke-width="1.2" opacity="0.8"/>`;
     }
-    out += `<rect x="2" y="2" width="4" height="4" rx="1" fill="#fff" opacity="0.35"/></g>`;
+    out += `<rect x="2" y="2" width="4" height="4" rx="1" fill="#fff" opacity="0.4"/></g>`;
     return out;
   }
 
   // 3. 百位百格板 (45x45, 內含10x10格)
   function drawHundredGrid(x, y, color = '#059669') {
     let out = `<g transform="translate(${x},${y})">
-      <rect width="45" height="45" rx="3" fill="${color}" stroke="#065f46" stroke-width="1.2"/>`;
+      <rect width="45" height="45" rx="3" fill="${color}" stroke="#065f46" stroke-width="1.5"/>`;
     for (let i = 1; i < 9; i++) {
-      out += `<line x1="${i * 5}" y1="1" x2="${i * 5}" y2="44" stroke="#ffffff" stroke-width="0.5" opacity="0.4"/>`;
-      out += `<line x1="1" y1="${i * 5}" x2="44" y2="${i * 5}" stroke="#ffffff" stroke-width="0.5" opacity="0.4"/>`;
+      out += `<line x1="${i * 5}" y1="1" x2="${i * 5}" y2="44" stroke="#ffffff" stroke-width="0.6" opacity="0.5"/>`;
+      out += `<line x1="1" y1="${i * 5}" x2="44" y2="${i * 5}" stroke="#ffffff" stroke-width="0.6" opacity="0.5"/>`;
     }
     out += `<rect x="2" y="2" width="8" height="8" rx="1" fill="#fff" opacity="0.35"/></g>`;
     return out;
@@ -170,27 +170,38 @@ window.DECK = window.DECK || [];
         }
       },
 
-      /* ---------- 升級版 2-1-2 「圈圈換長條」純圖形積木進位模擬器 ---------- */
+      /* ---------- 升級版 2-1-2 「頂部步驟按鈕 ＋ 獨立十格條 ＋ 精準10個框」進位模擬器 ---------- */
       {
         sec: '2-1', secName: '四位數的加法',
         title: '看圖理解：圈起10個小方塊，換成1條長積木！',
         points: [
-          '點擊下方<b>【進位動畫】</b>按鈕，看黃色圈圈如何精準圈起 10 個小方塊。',
-          '<b>10 個小方塊 ➔ 換成 1 條長積木</b>移到十位。',
-          '直式十位數上方會同步出現紅圈 <span class="k">①</span>！'
+          '點擊上方<b>【步驟按鈕】</b>觀察進位過程。',
+          '黃色虛線框<b>精準圈住 10 個小方塊</b>（下有 2 個留著）。',
+          '<b>10 個小方塊 ➔ 換成 1 條長積木</b>移到十位（直式記 ①）。'
         ],
         visual: (h) => {
-          h.innerHTML = `<div style="width:100%;text-align:center;padding:4px">
-            <div class="addg"></div>
-            <div class="ictrl" style="margin-top:8px;display:flex;justify-content:center;gap:10px;flex-wrap:nowrap">
-              <button class="step-btn btn-0 active">⏮️ 135 ＋ 247 原圖</button>
-              <button class="step-btn btn-1">🟡 圈選10個小方塊</button>
-              <button class="step-btn btn-2">✨ 換成1條長積木進位！</button>
+          h.innerHTML = `<div style="width:100%;text-align:center;padding:2px">
+            <div style="display:flex;justify-content:center;gap:6px;margin-bottom:8px;flex-wrap:nowrap;align-items:center">
+              <button class="play-btn btn-play">▶️ 播放動畫</button>
+              <button class="step-btn btn-0 active">1. 原圖(135+247)</button>
+              <button class="step-btn btn-1">2. 🟡 圈選10個</button>
+              <button class="step-btn btn-2">3. ✨ 換成1條進位</button>
             </div>
+            <div class="addg"></div>
           </div>`;
 
           let step = 0;
+          let timer = null;
           const a = 135, b = 247, sum = 382;
+
+          const stopTimer = () => {
+            if (timer) { clearInterval(timer); timer = null; }
+            const playBtn = h.querySelector('.btn-play');
+            if (playBtn) {
+              playBtn.classList.remove('playing');
+              playBtn.innerHTML = '▶️ 播放動畫';
+            }
+          };
 
           const update = () => {
             h.querySelectorAll('.step-btn').forEach((btn, idx) => {
@@ -204,44 +215,50 @@ window.DECK = window.DECK || [];
             
             // 位值欄標題 (百, 十, 個)
             out += TX(55, 36, '百格板', { fs: 11, c: GRN, anchor: 'middle' });
-            out += TX(115, 36, '十格條', { fs: 11, c: VIO, anchor: 'middle' });
+            out += TX(125, 36, '十格條', { fs: 11, c: VIO, anchor: 'middle' });
             out += TX(198, 36, '個位小方塊', { fs: 11, c: RED, anchor: 'middle' });
             out += `<line x1="20" y1="42" x2="240" y2="42" stroke="#eee" stroke-width="1"/>`;
 
-            // 百格板 (135 有 1 張, 247 有 2 張)
+            // 1. 百格板 (135 有 1 張, 247 有 2 張)
             out += drawHundredGrid(30, 48);
             out += drawHundredGrid(30, 98);
             out += drawHundredGrid(55, 98);
 
-            // 十格條 (135 有 3 條, 247 有 4 條)
-            for (let i = 0; i < 3; i++) out += drawTenRod(95 + i * 14, 48);
-            for (let i = 0; i < 4; i++) out += drawTenRod(95 + i * 14, 98);
+            // 2. 十格條 (拉開間距 step=18px，獨立清晰)
+            // 135 有 3 條 (上列)
+            for (let i = 0; i < 3; i++) out += drawTenRod(92 + i * 18, 48);
+            // 247 有 4 條 (下列)
+            for (let i = 0; i < 4; i++) out += drawTenRod(92 + i * 18, 98);
 
-            // 個位小方塊 (135 有 5 個 排成第1排; 247 有 7 個 排成第2排[5個]與第3排[2個])
-            // 排版: 第1排 (y=48), 第2排 (y=66), 第3排 (y=88)
-            // 第 1 排 (5個): x = 162, 177, 192, 207, 222
+            // 標示十格條數量標籤
+            if (step === 0 || step === 1) {
+              out += TX(125, 142, '十位：上3條＋下4條 ＝ 7條(70)', { fs: 10, c: VIO, anchor: 'middle', fw: '900' });
+            } else if (step === 2) {
+              out += TX(125, 142, '十位：3條＋4條＋1條進位 ＝ 8條(80)', { fs: 10, c: AMB, anchor: 'middle', fw: '900' });
+            }
+
+            // 3. 個位小方塊 (135 有 5 個 排第1排; 247 有 7 個 排第2排[5個]與第3排[2個])
             for (let i = 0; i < 5; i++) out += drawUnitCube(162 + i * 15, 48);
-            
-            // 如果是在步驟 0 或 步驟 1，畫出全部 7 個加數方塊 (第2排5個 + 第3排2個)
+
             if (step === 0 || step === 1) {
               for (let i = 0; i < 5; i++) out += drawUnitCube(162 + i * 15, 66);
               for (let i = 0; i < 2; i++) out += drawUnitCube(162 + i * 15, 88);
             } else if (step === 2) {
-              // 步驟 2: 10 個方塊已經換走，只剩下第3排 2 個方塊！
+              // 步驟 2: 10 個方塊換走，只留下第 3 排 2 個！
               for (let i = 0; i < 2; i++) out += drawUnitCube(162 + i * 15, 88);
             }
 
-            // 步驟 1: 精準黃色虛線框圈選第 1 排 (5個) + 第 2 排 (5個) ＝ 剛好 10 個小方塊！
+            // 步驟 1: 黃色虛線框精準圈選 10 個小方塊！
             if (step === 1) {
               out += `<rect x="158" y="44" width="82" height="38" rx="6" fill="rgba(245,158,11,.18)" stroke="#f59e0b" stroke-width="3" stroke-dasharray="5,3"/>`;
-              out += TX(199, 120, '黃框內剛好 10 個！', { fs: 11, c: AMB, anchor: 'middle', fw: '900' });
+              out += TX(199, 120, '黃框內剛好 10 個！', { fs: 10, c: AMB, anchor: 'middle', fw: '900' });
             }
 
-            // 步驟 2: 黃圈裡的 10 個變成 1 條十格積木移向十位！
+            // 步驟 2: 換成 1 條發光十格積木進到十位！
             if (step === 2) {
-              out += drawTenRod(137, 48, '#f59e0b'); // 新進位的發光黃長條
-              out += `<path d="M 158 63 Q 148 50 142 63" fill="none" stroke="${AMB}" stroke-width="2.5" stroke-dasharray="3,3"/>`;
-              out += TX(199, 120, '個位留下 2 個！', { fs: 11, c: RED, anchor: 'middle', fw: '900' });
+              out += drawTenRod(146, 48, '#f59e0b'); // 新進位的發光黃長條
+              out += `<path d="M 158 63 Q 150 50 148 63" fill="none" stroke="${AMB}" stroke-width="2.5" stroke-dasharray="3,3"/>`;
+              out += TX(199, 120, '個位留下 2 個！', { fs: 10, c: RED, anchor: 'middle', fw: '900' });
             }
 
             // 右側直式區域 (x=250~375)
@@ -257,12 +274,26 @@ window.DECK = window.DECK || [];
             const resVal = step === 0 ? '' : (step === 1 ? '' : ' 382');
             out += renderVerticalMath('＋', a, b, resVal, 260, 58, { fs: 15, colW: 22, colorRes: RED, opColor: VIO });
 
-            h.innerHTML = svg('0 0 400 170', out);
+            h.querySelector('.addg').innerHTML = svg('0 0 400 170', out);
           };
 
-          h.querySelector('.btn-0').onclick = () => { step = 0; update(); };
-          h.querySelector('.btn-1').onclick = () => { step = 1; update(); };
-          h.querySelector('.btn-2').onclick = () => { step = 2; update(); };
+          const playBtn = h.querySelector('.btn-play');
+          playBtn.onclick = () => {
+            if (timer) {
+              stopTimer();
+            } else {
+              playBtn.classList.add('playing');
+              playBtn.innerHTML = '⏸️ 暫停動畫';
+              timer = setInterval(() => {
+                step = (step + 1) % 3;
+                update();
+              }, 1600);
+            }
+          };
+
+          h.querySelector('.btn-0').onclick = () => { stopTimer(); step = 0; update(); };
+          h.querySelector('.btn-1').onclick = () => { stopTimer(); step = 1; update(); };
+          h.querySelector('.btn-2').onclick = () => { stopTimer(); step = 2; update(); };
           update();
         },
         caption: '觀察畫面：黃色虛線框精準圈起 10 個小方塊，換成 1 條長積木移到十位，直式上記下 ①！',
@@ -390,23 +421,34 @@ window.DECK = window.DECK || [];
         sec: '2-2', secName: '四位數的減法',
         title: '看圖解密：1張百格板拆成10條長積木，中間0變9！',
         points: [
-          '點擊下方<b>【退位拆解】</b>按鈕，看大積木如何拆成小積木。',
+          '點擊上方<b>【步驟按鈕】</b>看大積木如何拆成小積木。',
           '<b>1 張百格板 ➔ 拆成 10 條長積木</b>（百位剩 2，十位有 10）。',
           '再取 <b>1 條長積木 ➔ 拆成 10 個小方塊</b>（十位剩 9，個位有 10）！'
         ],
         visual: (h) => {
-          h.innerHTML = `<div style="width:100%;text-align:center;padding:4px">
-            <div class="subg"></div>
-            <div class="ictrl" style="margin-top:8px;display:flex;justify-content:center;gap:8px;flex-wrap:nowrap">
-              <button class="step-btn btn-0 active">⏮️ 300 － 147 原圖</button>
-              <button class="step-btn btn-1">✂️ 拆1張百格板到十位</button>
-              <button class="step-btn btn-2">✂️ 拆1條長積木到個位</button>
-              <button class="step-btn btn-3">✨ 完成扣減(153)</button>
+          h.innerHTML = `<div style="width:100%;text-align:center;padding:2px">
+            <div style="display:flex;justify-content:center;gap:6px;margin-bottom:8px;flex-wrap:nowrap;align-items:center">
+              <button class="play-btn btn-play">▶️ 播放動畫</button>
+              <button class="step-btn btn-0 active">1. 原圖(300)</button>
+              <button class="step-btn btn-1">2. ✂️ 拆1百格板到十位</button>
+              <button class="step-btn btn-2">3. ✂️ 拆1長條到個位</button>
+              <button class="step-btn btn-3">4. ✨ 扣減剩153</button>
             </div>
+            <div class="subg"></div>
           </div>`;
 
           let step = 0;
+          let timer = null;
           const a = 300, b = 147, diff = 153;
+
+          const stopTimer = () => {
+            if (timer) { clearInterval(timer); timer = null; }
+            const playBtn = h.querySelector('.btn-play');
+            if (playBtn) {
+              playBtn.classList.remove('playing');
+              playBtn.innerHTML = '▶️ 播放動畫';
+            }
+          };
 
           const update = () => {
             h.querySelectorAll('.step-btn').forEach((btn, idx) => {
@@ -419,8 +461,8 @@ window.DECK = window.DECK || [];
             out += BOX(20, 20, 220, 135, { fill: '#fff', stroke: '#ddd' });
 
             out += TX(55, 36, '百格板', { fs: 11, c: GRN, anchor: 'middle' });
-            out += TX(120, 36, '十格條', { fs: 11, c: VIO, anchor: 'middle' });
-            out += TX(185, 36, '小方塊', { fs: 11, c: RED, anchor: 'middle' });
+            out += TX(125, 36, '十格條', { fs: 11, c: VIO, anchor: 'middle' });
+            out += TX(198, 36, '個位小方塊', { fs: 11, c: RED, anchor: 'middle' });
             out += `<line x1="20" y1="42" x2="240" y2="42" stroke="#eee" stroke-width="1"/>`;
 
             // 步驟 0: 300 (3張百格板)
@@ -428,29 +470,29 @@ window.DECK = window.DECK || [];
               out += drawHundredGrid(25, 48);
               out += drawHundredGrid(55, 48);
               out += drawHundredGrid(40, 98);
-              out += TX(120, 85, '(0條)', { fs: 11, c: '#94a3b8', anchor: 'middle' });
-              out += TX(185, 85, '(0個)', { fs: 11, c: '#94a3b8', anchor: 'middle' });
+              out += TX(125, 85, '十位：【0 條】', { fs: 11, c: '#94a3b8', anchor: 'middle', fw: '900' });
+              out += TX(198, 85, '個位：【0 個】', { fs: 11, c: '#94a3b8', anchor: 'middle', fw: '900' });
             } else if (step === 1) {
-              // 百位剩2張，十位得到10條長積木！
+              // 百位剩2張，十位得到10條獨立十格積木 (每條間距15px，清晰可數)
               out += drawHundredGrid(25, 48);
               out += drawHundredGrid(55, 48);
-              for(let i=0; i<5; i++) out += drawTenRod(95 + i*13, 48);
-              for(let i=0; i<5; i++) out += drawTenRod(95 + i*13, 80);
+              for(let i=0; i<5; i++) out += drawTenRod(88 + i*15, 48);
+              for(let i=0; i<5; i++) out += drawTenRod(88 + i*15, 82);
               out += TX(55, 108, '百位剩 2 張', { fs: 10, c: GRN, anchor: 'middle', fw: '900' });
-              out += TX(125, 142, '1張百格板 ➔ 拆成 10 條長積木！', { fs: 10, c: RED, anchor: 'middle', fw: '900' });
+              out += TX(125, 142, '十位得到：【剛好 10 條！】', { fs: 10, c: RED, anchor: 'middle', fw: '900' });
             } else if (step === 2) {
               // 十位剩 9 條長積木，個位得到 10 個小方塊！
               out += drawHundredGrid(25, 48);
               out += drawHundredGrid(55, 48);
-              for(let i=0; i<9; i++) out += drawTenRod(90 + (i%5)*13, 48 + Math.floor(i/5)*38);
-              for(let i=0; i<10; i++) out += drawUnitCube(165 + (i%2)*14, 48 + Math.floor(i/2)*14);
-              out += TX(120, 142, '十位剩 9 條，個位得到 10 個小方塊！', { fs: 10, c: RED, anchor: 'middle', fw: '900' });
+              for(let i=0; i<9; i++) out += drawTenRod(85 + (i%5)*15, 48 + Math.floor(i/5)*38);
+              for(let i=0; i<10; i++) out += drawUnitCube(175 + (i%2)*15, 48 + Math.floor(i/2)*14);
+              out += TX(125, 142, '十位【剩 9 條】，個位【10 個小方塊】', { fs: 10, c: RED, anchor: 'middle', fw: '900' });
             } else if (step === 3) {
               // 完成扣減 153 (1板, 5條, 3個)
               out += drawHundredGrid(40, 60);
-              for(let i=0; i<5; i++) out += drawTenRod(100 + i*13, 60);
-              for(let i=0; i<3; i++) out += drawUnitCube(175, 50 + i*16);
-              out += TX(120, 142, '🎉 扣除147後，剩下 153！', { fs: 11, c: GRN, anchor: 'middle', fw: '900' });
+              for(let i=0; i<5; i++) out += drawTenRod(100 + i*15, 60);
+              for(let i=0; i<3; i++) out += drawUnitCube(188, 50 + i*16);
+              out += TX(125, 142, '🎉 扣除147後，十位剩【5 條】＝ 153！', { fs: 10, c: GRN, anchor: 'middle', fw: '900' });
             }
 
             // 右側直式區域 (x=250~375)
@@ -473,10 +515,24 @@ window.DECK = window.DECK || [];
             h.querySelector('.subg').innerHTML = svg('0 0 400 170', out);
           };
 
-          h.querySelector('.btn-0').onclick = () => { step = 0; update(); };
-          h.querySelector('.btn-1').onclick = () => { step = 1; update(); };
-          h.querySelector('.btn-2').onclick = () => { step = 2; update(); };
-          h.querySelector('.btn-3').onclick = () => { step = 3; update(); };
+          const playBtn = h.querySelector('.btn-play');
+          playBtn.onclick = () => {
+            if (timer) {
+              stopTimer();
+            } else {
+              playBtn.classList.add('playing');
+              playBtn.innerHTML = '⏸️ 暫停動畫';
+              timer = setInterval(() => {
+                step = (step + 1) % 4;
+                update();
+              }, 1600);
+            }
+          };
+
+          h.querySelector('.btn-0').onclick = () => { stopTimer(); step = 0; update(); };
+          h.querySelector('.btn-1').onclick = () => { stopTimer(); step = 1; update(); };
+          h.querySelector('.btn-2').onclick = () => { stopTimer(); step = 2; update(); };
+          h.querySelector('.btn-3').onclick = () => { stopTimer(); step = 3; update(); };
           update();
         },
         caption: '觀察畫面：1張百格板拆成10條長積木，再拿1條長積木拆成10個小方塊！所以百位剩2、十位剩9！',

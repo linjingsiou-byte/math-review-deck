@@ -493,6 +493,19 @@ svg .dim { fill: var(--muted); }
 }
 .step-btn:hover { background: var(--ct, #7c3aed); color: #ffffff; }
 .step-btn.active { background: var(--ct, #7c3aed); color: #ffffff; box-shadow: 0 4px 12px rgba(124,58,237,0.3); }
+.play-btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 4px;
+  padding: 6px 16px; height: 36px; border-radius: 999px;
+  border: 1.5px solid #e11d48; background: #fff1f2; color: #e11d48;
+  font-size: 13px; font-weight: 900; white-space: nowrap; cursor: pointer;
+  box-shadow: 0 2px 6px rgba(225,29,72,0.15); transition: all 0.15s ease;
+}
+.play-btn:hover { background: #e11d48; color: #ffffff; }
+.play-btn.playing { background: #e11d48; color: #ffffff; animation: pulseGlow 1.2s infinite alternate; }
+@keyframes pulseGlow {
+  0% { box-shadow: 0 0 4px rgba(225,29,72,0.4); transform: scale(1); }
+  100% { box-shadow: 0 0 14px rgba(225,29,72,0.8); transform: scale(1.04); }
+}
 #dkLaser.active { background: var(--rose); color: #fff; }
 #dkPen.active { background: var(--green); color: #fff; }
 .dsep { height: 1px; background: var(--line); margin: 2px 5px; }
