@@ -484,6 +484,15 @@ svg .dim { fill: var(--muted); }
 .dbtn svg { width: 22px; height: 22px; }
 .dbtn:hover { background: rgba(37,99,235,0.10); color: var(--blue); }
 .dbtn.active { background: var(--blue); color: #fff; }
+.step-btn {
+  display: inline-flex; align-items: center; justify-content: center;
+  padding: 6px 14px; height: 36px; border-radius: 999px;
+  border: 1.5px solid var(--ct, #7c3aed); background: #ffffff; color: var(--ct, #7c3aed);
+  font-size: 13px; font-weight: 800; white-space: nowrap; cursor: pointer;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.06); transition: all 0.15s ease;
+}
+.step-btn:hover { background: var(--ct, #7c3aed); color: #ffffff; }
+.step-btn.active { background: var(--ct, #7c3aed); color: #ffffff; box-shadow: 0 4px 12px rgba(124,58,237,0.3); }
 #dkLaser.active { background: var(--rose); color: #fff; }
 #dkPen.active { background: var(--green); color: #fff; }
 .dsep { height: 1px; background: var(--line); margin: 2px 5px; }
