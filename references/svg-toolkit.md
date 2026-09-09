@@ -93,6 +93,28 @@ SV.stepper(h, '0 0 440 300', [
   可以用來做「拖到一半時動到一半」的連續動畫
 - `opt.acc`（預設 `true`）：疊加前面所有步驟。設 `false` 表示每步自己畫完整場景
 
+## 國小中年級專用教具
+
+| 函式 | 說明與參數 |
+|---|---|
+| `SV.clock(opt)` | 鐘面針盤工具。`opt={cx, cy, r, hour, minute, showTicks, showNumbers, color}` |
+| `SV.fractionBar(opt)` | 分數條形切分圖。`opt={x, y, w, h, total, parts, colors:['#3b82f6','#f1f5f9'], labels:[]}` |
+| `SV.fractionPie(opt)` | 分數圓形派切分圖。`opt={cx, cy, r, total, parts, colors}` |
+| `SV.placeValueTable(opt)` | 位值對齊板。`opt={x, y, w, h, cols:['千','百','十','個'], rows:[['2','5','0','8']], color}` |
+| `SV.verticalMath(opt)` | 直式運算板。`opt={x, y, op:'+', num1:'358', num2:'265', ans:'623', carries:[{pos:1,val:'1'}]}` |
+| `SV.baseTenBlocks(opt)` | 十進位積木組（百格板/十格棒/積木塊）。`opt={x, y, hundreds:1, tens:2, units:5, color}` |
+
+```js
+// 範例 1：顯示 10 點 25 分的鐘面
+SV.clock({ cx: 160, cy: 140, r: 90, hour: 10, minute: 25 });
+
+// 範例 2：顯示 8 等份中塗色 3 份的分數條形圖
+SV.fractionBar({ x: 20, y: 40, w: 340, h: 45, total: 8, parts: 3 });
+
+// 範例 3：直式加法（包含百位進位標記）
+SV.verticalMath({ x: 120, y: 30, op: '+', num1: '382', num2: '245', ans: '627', carries: [{pos: 2, val: '1'}] });
+```
+
 ## MathJax 重排
 
 互動更新後如果圖裡含 MathJax 內容，呼叫：

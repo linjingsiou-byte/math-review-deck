@@ -30,9 +30,20 @@ const forbidArg = (() => {
   const i = args.indexOf('--forbid');
   return i >= 0 && args[i + 1] ? args[i + 1].split(',').map((s) => s.trim()).filter(Boolean) : [];
 })();
+const presetArg = (() => {
+  const i = args.indexOf('--preset');
+  return i >= 0 && args[i + 1] ? args[i + 1].trim() : '';
+})();
+
+const elementaryForbid = ['未知數x', '判別式', '負數', '異分母', '平方根', '勾股定理', '連比', '斜率', '方程式'];
+
+const forbidWords = [
+  ...forbidArg,
+  ...(presetArg === 'elementary' || presetArg === '國小' ? elementaryForbid : [])
+];
 
 if (!dir) {
-  console.error('用法：node scripts/verify_deck.js <簡報資料夾> [--forbid 詞1,詞2] [--quiet]');
+  console.error('用法：node scripts/verify_deck.js <簡報資料夾> [--forbid 詞1,詞2] [--preset elementary] [--quiet]');
   process.exit(2);
 }
 if (!fs.existsSync(dir)) {
@@ -124,6 +135,12 @@ const SVstub = {
       if (typeof st.d === 'function') { st.d(0); st.d(0.5); st.d(1); }
     });
   },
+  clock: () => '<circle cx="150" cy="150" r="100"/>',
+  fractionBar: () => '<g class="fraction-bar"></g>',
+  fractionPie: () => '<g class="fraction-pie"></g>',
+  placeValueTable: () => '<g class="place-value-table"></g>',
+  verticalMath: () => '<g class="vertical-math"></g>',
+  baseTenBlocks: () => '<g class="base-ten-blocks"></g>',
 };
 
 /* ---------- 逐檔載入 ---------- */
@@ -210,7 +227,7 @@ DECK.forEach((chap, ci) => {
     if (open !== close) err(`${tag}：行內數學 \\( 有 ${open} 個、\\) 有 ${close} 個，不成對`);
 
     // 超綱字詞
-    forbidArg.forEach((w) => {
+    forbidWords.forEach((w) => {
       if (joined.includes(w)) err(`${tag}：出現禁用詞「${w}」（超出指定範圍）`);
     });
 

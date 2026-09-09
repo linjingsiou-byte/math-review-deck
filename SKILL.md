@@ -76,8 +76,11 @@ python scripts/new_deck.py --out 我的複習網站 \
 
 ### 3. 寫各章內容
 
-編輯 `chN.js`。**完整格式規格見 `references/slide-spec.md`——動手前先讀。**
-`SV` 幾何工具的完整 API 見 `references/svg-toolkit.md`，
+編輯 `chN.js`。
+- **國中/高中簡報規格**：見 `references/slide-spec.md`。
+- **國小中年級簡報規格**：見 `references/slide-spec-elementary.md`（遵循 CPA 具體到抽象教學法、極簡文字與國小專用教具）。
+
+`SV` 工具庫（包含鐘面、分數圖、位值板、直式運算與幾何圖形）的完整 API 見 `references/svg-toolkit.md`，
 互動的常見寫法見 `references/interaction-patterns.md`。
 
 一頁投影片的骨架：

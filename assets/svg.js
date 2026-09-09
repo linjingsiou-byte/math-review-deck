@@ -165,9 +165,175 @@ const SV = (() => {
     sl.oninput = draw; draw();
   };
 
-  return { pt, angleOf, arcPoints, angle, rightAngle, ticks, dot, vlabel, seg, poly, arrowDefs, plane, RAD, fbox, stepper };
+  // 1. 鐘面圖工具（時針、分針角度計算）
+  const clock = (opt = {}) => {
+    const { cx = 150, cy = 150, r = 100, hour = 10, minute = 10, showTicks = true, showNumbers = true, color = '#2563eb' } = opt;
+    let out = `<circle cx="${cx}" cy="${cy}" r="${r}" fill="#ffffff" stroke="${color}" stroke-width="4"/>`;
+    for (let i = 1; i <= 12; i++) {
+      const ang = (i * 30 - 90) * RAD;
+      const x1 = cx + (r - 10) * Math.cos(ang);
+      const y1 = cy + (r - 10) * Math.sin(ang);
+      const x2 = cx + r * Math.cos(ang);
+      const y2 = cy + r * Math.sin(ang);
+      if (showTicks) {
+        out += `<line x1="${x1.toFixed(1)}" y1="${y1.toFixed(1)}" x2="${x2.toFixed(1)}" y2="${y2.toFixed(1)}" stroke="#64748b" stroke-width="2.5"/>`;
+      }
+      if (showNumbers) {
+        const nx = cx + (r - 24) * Math.cos(ang);
+        const ny = cy + (r - 24) * Math.sin(ang) + 5;
+        out += `<text x="${nx.toFixed(1)}" y="${ny.toFixed(1)}" text-anchor="middle" font-size="15" font-weight="700" fill="#334155">${i}</text>`;
+      }
+    }
+    if (showTicks) {
+      for (let i = 0; i < 60; i++) {
+        if (i % 5 === 0) continue;
+        const ang = (i * 6 - 90) * RAD;
+        const x1 = cx + (r - 5) * Math.cos(ang);
+        const y1 = cy + (r - 5) * Math.sin(ang);
+        const x2 = cx + r * Math.cos(ang);
+        const y2 = cy + r * Math.sin(ang);
+        out += `<line x1="${x1.toFixed(1)}" y1="${y1.toFixed(1)}" x2="${x2.toFixed(1)}" y2="${y2.toFixed(1)}" stroke="#cbd5e1" stroke-width="1.2"/>`;
+      }
+    }
+    const mDeg = (minute * 6 - 90) * RAD;
+    const hDeg = (((hour % 12) + minute / 60) * 30 - 90) * RAD;
+    const mx = cx + (r - 20) * Math.cos(mDeg);
+    const my = cy + (r - 20) * Math.sin(mDeg);
+    out += `<line x1="${cx}" y1="${cy}" x2="${mx.toFixed(1)}" y2="${my.toFixed(1)}" stroke="#0284c7" stroke-width="4" stroke-linecap="round"/>`;
+    const hx = cx + (r - 45) * Math.cos(hDeg);
+    const hy = cy + (r - 45) * Math.sin(hDeg);
+    out += `<line x1="${cx}" y1="${cy}" x2="${hx.toFixed(1)}" y2="${hy.toFixed(1)}" stroke="#e11d48" stroke-width="6" stroke-linecap="round"/>`;
+    out += `<circle cx="${cx}" cy="${cy}" r="6" fill="#1e293b"/>`;
+    return out;
+  };
+
+  // 2. 分數長條條形圖切分工具
+  const fractionBar = (opt = {}) => {
+    const { x = 20, y = 30, w = 360, h = 40, total = 4, parts = 1, colors = ['#3b82f6', '#f1f5f9'], labels = [] } = opt;
+    const itemW = w / total;
+    let out = `<g class="fraction-bar">`;
+    for (let i = 0; i < total; i++) {
+      const fill = i < parts ? (colors[0] || '#3b82f6') : (colors[1] || '#f1f5f9');
+      const bx = x + i * itemW;
+      out += `<rect x="${bx.toFixed(1)}" y="${y}" width="${itemW.toFixed(1)}" height="${h}" fill="${fill}" stroke="#475569" stroke-width="2"/>`;
+      if (labels && labels[i]) {
+        out += `<text x="${(bx + itemW / 2).toFixed(1)}" y="${y + h / 2 + 5}" text-anchor="middle" font-size="15" font-weight="700" fill="${i < parts ? '#ffffff' : '#334155'}">${labels[i]}</text>`;
+      }
+    }
+    out += `</g>`;
+    return out;
+  };
+
+  // 3. 分數圓形派圖切分工具
+  const fractionPie = (opt = {}) => {
+    const { cx = 150, cy = 150, r = 90, total = 4, parts = 1, colors = ['#3b82f6', '#f1f5f9'] } = opt;
+    let out = `<g class="fraction-pie">`;
+    const step = 360 / total;
+    for (let i = 0; i < total; i++) {
+      const d0 = i * step - 90;
+      const d1 = (i + 1) * step - 90;
+      const fill = i < parts ? (colors[0] || '#3b82f6') : (colors[1] || '#f1f5f9');
+      const [x0, y0] = [cx + r * Math.cos(d0 * RAD), cy + r * Math.sin(d0 * RAD)];
+      const [x1, y1] = [cx + r * Math.cos(d1 * RAD), cy + r * Math.sin(d1 * RAD)];
+      const largeArc = step > 180 ? 1 : 0;
+      out += `<path d="M${cx},${cy} L${x0.toFixed(1)},${y0.toFixed(1)} A${r},${r} 0 ${largeArc} 1 ${x1.toFixed(1)},${y1.toFixed(1)} Z" fill="${fill}" stroke="#334155" stroke-width="2"/>`;
+    }
+    out += `</g>`;
+    return out;
+  };
+
+  // 4. 位值對齊板（萬、千、百、十、個位 / 十分位 / 百分位）
+  const placeValueTable = (opt = {}) => {
+    const { x = 20, y = 20, w = 360, h = 180, cols = ['千位', '百位', '十位', '個位'], rows = [], color = '#0284c7' } = opt;
+    const colW = w / cols.length;
+    const rowH = h / (rows.length + 1);
+    let out = `<g class="place-value-table">`;
+    cols.forEach((col, i) => {
+      const bx = x + i * colW;
+      out += `<rect x="${bx.toFixed(1)}" y="${y}" width="${colW.toFixed(1)}" height="${rowH.toFixed(1)}" fill="${color}" stroke="#ffffff" stroke-width="1.5"/>`;
+      out += `<text x="${(bx + colW / 2).toFixed(1)}" y="${y + rowH / 2 + 5}" text-anchor="middle" font-size="15" font-weight="700" fill="#ffffff">${col}</text>`;
+    });
+    rows.forEach((row, rIdx) => {
+      const ry = y + (rIdx + 1) * rowH;
+      const bg = rIdx % 2 === 0 ? '#f8fafc' : '#f1f5f9';
+      row.forEach((val, cIdx) => {
+        const bx = x + cIdx * colW;
+        out += `<rect x="${bx.toFixed(1)}" y="${ry.toFixed(1)}" width="${colW.toFixed(1)}" height="${rowH.toFixed(1)}" fill="${bg}" stroke="#cbd5e1" stroke-width="1"/>`;
+        out += `<text x="${(bx + colW / 2).toFixed(1)}" y="${ry + rowH / 2 + 6}" text-anchor="middle" font-size="18" font-weight="700" fill="#0f172a">${val !== undefined ? val : ''}</text>`;
+      });
+    });
+    out += `</g>`;
+    return out;
+  };
+
+  // 5. 直式運算對齊與進退位記號
+  const verticalMath = (opt = {}) => {
+    const { x = 120, y = 30, op = '+', num1 = '325', num2 = '148', ans = '473', carries = [], color = '#e11d48' } = opt;
+    const maxLen = Math.max(num1.toString().length, num2.toString().length, ans ? ans.toString().length : 0);
+    const charW = 28;
+    const startX = x + maxLen * charW;
+    let out = `<g class="vertical-math" font-family="monospace" font-weight="700">`;
+    carries.forEach(c => {
+      const cx = startX - c.pos * charW - charW / 2;
+      out += `<text x="${cx.toFixed(1)}" y="${y - 8}" text-anchor="middle" font-size="13" fill="${color}">${c.val}</text>`;
+    });
+    const n1 = num1.toString();
+    for (let i = 0; i < n1.length; i++) {
+      const cx = startX - (n1.length - 1 - i) * charW - charW / 2;
+      out += `<text x="${cx.toFixed(1)}" y="${y + 24}" text-anchor="middle" font-size="22" fill="#1e293b">${n1[i]}</text>`;
+    }
+    out += `<text x="${x - 10}" y="${y + 60}" text-anchor="middle" font-size="22" fill="#0f172a">${op}</text>`;
+    const n2 = num2.toString();
+    for (let i = 0; i < n2.length; i++) {
+      const cx = startX - (n2.length - 1 - i) * charW - charW / 2;
+      out += `<text x="${cx.toFixed(1)}" y="${y + 60}" text-anchor="middle" font-size="22" fill="#1e293b">${n2[i]}</text>`;
+    }
+    out += `<line x1="${x - charW / 2}" y1="${y + 72}" x2="${startX + 10}" y2="${y + 72}" stroke="#334155" stroke-width="2.5"/>`;
+    if (ans !== undefined && ans !== null && ans !== '') {
+      const aStr = ans.toString();
+      for (let i = 0; i < aStr.length; i++) {
+        const cx = startX - (aStr.length - 1 - i) * charW - charW / 2;
+        out += `<text x="${cx.toFixed(1)}" y="${y + 102}" text-anchor="middle" font-size="24" fill="${color}">${aStr[i]}</text>`;
+      }
+    }
+    out += `</g>`;
+    return out;
+  };
+
+  // 6. 百格板 / 十格棒 / 1積木 (Base-Ten Blocks)
+  const baseTenBlocks = (opt = {}) => {
+    const { x = 20, y = 20, hundreds = 1, tens = 2, units = 5, color = '#2563eb' } = opt;
+    let out = `<g class="base-ten-blocks">`;
+    let curX = x;
+    for (let i = 0; i < hundreds; i++) {
+      out += `<rect x="${curX}" y="${y}" width="70" height="70" fill="${color}" opacity="0.2" stroke="${color}" stroke-width="2"/>`;
+      for (let grid = 1; grid < 10; grid++) {
+        out += `<line x1="${curX + grid * 7}" y1="${y}" x2="${curX + grid * 7}" y2="${y + 70}" stroke="${color}" stroke-width="0.8" opacity="0.6"/>`;
+        out += `<line x1="${curX}" y1="${y + grid * 7}" x2="${curX + 70}" y2="${y + grid * 7}" stroke="${color}" stroke-width="0.8" opacity="0.6"/>`;
+      }
+      curX += 82;
+    }
+    for (let i = 0; i < tens; i++) {
+      out += `<rect x="${curX}" y="${y}" width="14" height="70" fill="#059669" opacity="0.3" stroke="#059669" stroke-width="1.8"/>`;
+      for (let grid = 1; grid < 10; grid++) {
+        out += `<line x1="${curX}" y1="${y + grid * 7}" x2="${curX + 14}" y2="${y + grid * 7}" stroke="#059669" stroke-width="0.8"/>`;
+      }
+      curX += 22;
+    }
+    let unitY = y;
+    for (let i = 0; i < units; i++) {
+      out += `<rect x="${curX}" y="${unitY}" width="12" height="12" fill="#d97706" opacity="0.4" stroke="#d97706" stroke-width="1.5"/>`;
+      unitY += 15;
+      if (i === 4) { unitY = y; curX += 16; }
+    }
+    out += `</g>`;
+    return out;
+  };
+
+  return { pt, angleOf, arcPoints, angle, rightAngle, ticks, dot, vlabel, seg, poly, arrowDefs, plane, RAD, fbox, stepper, clock, fractionBar, fractionPie, placeValueTable, verticalMath, baseTenBlocks };
 })();
 
 // 互動視覺更新後，重新排版該區塊的 MathJax
 window.MJ = (el) => { if (window.MathJax && MathJax.typesetPromise) MathJax.typesetPromise(el ? [el] : undefined).catch(() => {}); };
+
 
