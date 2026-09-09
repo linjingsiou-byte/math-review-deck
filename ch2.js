@@ -17,6 +17,54 @@ window.DECK = window.DECK || [];
   const BOX = (x, y, w, h, o = {}) =>
     `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="${o.r || 10}" fill="${o.fill || '#fff'}" stroke="${o.stroke || '#dce3ee'}" stroke-width="${o.sw || 1.8}"/>`;
 
+  // 100% 精準位值對齊直式繪製 Helper (解決個/十/百/千位位值錯位問題)
+  function renderVerticalMath(op, numA, numB, result, startX, startY, opt = {}) {
+    const colW = opt.colW || 24;
+    const cols = [
+      startX,               // 0: 運算子 (+) 或 (-)
+      startX + colW,        // 1: 千位
+      startX + colW * 2,    // 2: 百位
+      startX + colW * 3,    // 3: 十位
+      startX + colW * 4     // 4: 個位
+    ];
+    
+    const strA = numA.toString().padStart(4, ' ');
+    const strB = numB.toString().padStart(4, ' ');
+    const strRes = result.toString().padStart(4, ' ');
+    
+    let out = '';
+    
+    // 第一列 (被加數/被減數 A)
+    for (let i = 0; i < 4; i++) {
+      const char = strA[i];
+      if (char !== ' ') {
+        out += TX(cols[i + 1], startY, char, { fs: opt.fs || 16, anchor: 'middle', c: opt.colorA || '#172033' });
+      }
+    }
+
+    // 第二列 (運算子 + 數 B)
+    out += TX(cols[0], startY + 25, op, { fs: opt.fs || 16, c: opt.opColor || VIO, anchor: 'middle' });
+    for (let i = 0; i < 4; i++) {
+      const char = strB[i];
+      if (char !== ' ') {
+        out += TX(cols[i + 1], startY + 25, char, { fs: opt.fs || 16, anchor: 'middle', c: opt.colorB || '#172033' });
+      }
+    }
+
+    // 橫線
+    out += `<line x1="${cols[0] - 8}" y1="${startY + 33}" x2="${cols[4] + 12}" y2="${startY + 33}" stroke="#172033" stroke-width="2"/>`;
+
+    // 第三列 (結果 Result)
+    for (let i = 0; i < 4; i++) {
+      const char = strRes[i];
+      if (char !== ' ') {
+        out += TX(cols[i + 1], startY + 56, char, { fs: (opt.fs || 16) + 1, c: opt.colorRes || RED, anchor: 'middle', fw: '900' });
+      }
+    }
+
+    return out;
+  }
+
   window.DECK.push({
     ch: 2,
     title: '四位數的加減',
@@ -99,10 +147,10 @@ window.DECK = window.DECK || [];
           h.innerHTML = `<div style="width:100%;text-align:center;padding:4px">
             <div class="addg"></div>
             <div class="ictrl" style="margin-top:8px">
-              <label>被加數 A：<span class="ival av">1227</span></label>
-              <input class="as" type="range" min="1000" max="2500" step="50" value="1227">
-              <label style="margin-left:12px">加數 B：<span class="ival bv">878</span></label>
-              <input class="bs" type="range" min="100" max="1500" step="50" value="878">
+              <label>被加數 A：<span class="ival av">1250</span></label>
+              <input class="as" type="range" min="1000" max="2500" step="50" value="1250">
+              <label style="margin-left:12px">加數 B：<span class="ival bv">900</span></label>
+              <input class="bs" type="range" min="100" max="1500" step="50" value="900">
             </div>
           </div>`;
 
@@ -116,11 +164,8 @@ window.DECK = window.DECK || [];
             let out = BOX(20, 10, 360, 150, { fill: '#f8fafc', stroke: BLU });
             out += TX(200, 32, `${a} ＋ ${b} ＝ ${sum}`, { fs: 17, c: BLU, anchor: 'middle' });
 
-            // 繪製直式與進位
-            out += TX(100, 60, `  ${a.toString().padStart(4, ' ')}`, { fs: 16, anchor: 'start' });
-            out += TX(100, 85, `＋ ${b.toString().padStart(4, ' ')}`, { fs: 16, c: BLU, anchor: 'start' });
-            out += `<line x1="95" y1="92" x2="200" y2="92" stroke="#334155" stroke-width="2"/>`;
-            out += TX(100, 115, `= ${sum}`, { fs: 18, c: RED, anchor: 'start' });
+            // 精確繪製直式與進位 (startX=50, startY=60, colW=26)
+            out += renderVerticalMath('＋', a, b, sum, 50, 60, { fs: 16, colW: 26, colorRes: RED, opColor: BLU });
 
             // 進位分析說明卡
             out += BOX(220, 45, 150, 100, { fill: '#fff', stroke: '#cbd5e1' });
@@ -299,10 +344,8 @@ window.DECK = window.DECK || [];
             let out = BOX(20, 10, 360, 150, { fill: '#fef2f2', stroke: RED });
             out += TX(200, 32, `${a} － ${b} ＝ ${diff}`, { fs: 17, c: RED, anchor: 'middle' });
 
-            out += TX(100, 60, `  ${a.toString().padStart(4, ' ')}`, { fs: 16, anchor: 'start' });
-            out += TX(100, 85, `－ ${b.toString().padStart(4, ' ')}`, { fs: 16, c: RED, anchor: 'start' });
-            out += `<line x1="95" y1="92" x2="200" y2="92" stroke="#334155" stroke-width="2"/>`;
-            out += TX(100, 115, `= ${diff}`, { fs: 18, c: GRN, anchor: 'start' });
+            // 精確繪製直式與退位 (startX=50, startY=60, colW=26)
+            out += renderVerticalMath('－', a, b, diff, 50, 60, { fs: 16, colW: 26, colorRes: GRN, opColor: RED });
 
             out += BOX(220, 45, 150, 100, { fill: '#fff', stroke: '#fca5a5' });
             out += TX(230, 68, '中間有0退位提示', { fs: 12, c: RED, fw: '900' });
@@ -514,19 +557,13 @@ window.DECK = window.DECK || [];
         visual: (h) => {
           let out = BOX(20, 15, 175, 145, { fill: '#fff1f2', stroke: RED });
           out += TX(107, 36, '❌ 常見錯誤', { fs: 14, c: RED, anchor: 'middle' });
-          out += TX(107, 65, ' 3010', { fs: 14, anchor: 'middle' });
-          out += TX(107, 85, '－1947', { fs: 14, anchor: 'middle' });
-          out += `<line x1="50" y1="92" x2="160" y2="92" stroke="#172033" stroke-width="1.8"/>`;
-          out += TX(107, 115, ' 1163', { fs: 15, c: RED, anchor: 'middle' });
-          out += TX(107, 140, '（百位忘記變 9！）', { fs: 11, c: RED, anchor: 'middle' });
+          out += renderVerticalMath('－', 3010, 1947, 1163, 40, 52, { fs: 14, colW: 22, colorRes: RED, opColor: RED });
+          out += TX(107, 142, '（百位忘記變 9！）', { fs: 11, c: RED, anchor: 'middle' });
 
           out += BOX(205, 15, 175, 145, { fill: '#f0fdf4', stroke: GRN });
           out += TX(292, 36, '✅ 正確算法', { fs: 14, c: GRN, anchor: 'middle' });
-          out += TX(292, 65, ' 3010', { fs: 14, anchor: 'middle' });
-          out += TX(292, 85, '－1947', { fs: 14, anchor: 'middle' });
-          out += `<line x1="235" y1="92" x2="350" y2="92" stroke="#172033" stroke-width="1.8"/>`;
-          out += TX(292, 115, ' 1063', { fs: 15, c: GRN, anchor: 'middle' });
-          out += TX(292, 140, '（百位 9－9＝0）', { fs: 11, c: GRN, anchor: 'middle' });
+          out += renderVerticalMath('－', 3010, 1947, 1063, 225, 52, { fs: 14, colW: 22, colorRes: GRN, opColor: GRN });
+          out += TX(292, 142, '（百位 9－9＝0）', { fs: 11, c: GRN, anchor: 'middle' });
 
           h.innerHTML = svg('0 0 400 175', out);
         },
