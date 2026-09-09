@@ -399,6 +399,27 @@ button { font: inherit; cursor: pointer; }
 .ival { font-weight: 900; color: var(--ct); font-size: 15px; min-width: 26px; text-align: center; }
 .chiprow { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-top: 12px; }
 
+/* HTML 原生垂直分數 (HTML Inline Fraction) */
+.mfrac {
+  display: inline-flex;
+  flex-direction: column;
+  vertical-align: middle;
+  text-align: center;
+  font-size: 0.85em;
+  line-height: 1.0;
+  margin: 0 3px;
+  font-family: "Cambria Math", "Times New Roman", serif;
+  font-style: italic;
+  font-weight: 900;
+}
+.mfrac .num {
+  border-bottom: 1.8px solid currentColor;
+  padding: 0 3px 1px;
+}
+.mfrac .den {
+  padding: 1px 3px 0;
+}
+
 /* SVG 共用樣式 */
 svg .lbl { font-family: "Noto Sans TC", sans-serif; font-weight: 800; }
 svg .mth { font-family: "Cambria Math", "Times New Roman", serif; font-style: italic; }

@@ -240,6 +240,16 @@ const SV = (() => {
     }
     out += `</g>`;
     return out;
+  // 3.5 2D 向量 SVG 垂直分數（可在 SVG 內部直接繪製真分數）
+  const fracSVG = (x, y, num, den, opt = {}) => {
+    const fs = opt.fs || 12;
+    const color = opt.c || '#172033';
+    const w = opt.w || 14;
+    return `<g transform="translate(${x}, ${y})">
+      <text x="0" y="-3" text-anchor="middle" font-size="${fs}" font-weight="900" fill="${color}">${num}</text>
+      <line x1="${-w/2}" y1="1" x2="${w/2}" y2="1" stroke="${color}" stroke-width="1.4"/>
+      <text x="0" y="${fs + 3}" text-anchor="middle" font-size="${fs}" font-weight="900" fill="${color}">${den}</text>
+    </g>`;
   };
 
   // 4. 位值對齊板（萬、千、百、十、個位 / 十分位 / 百分位）
@@ -493,7 +503,7 @@ const SV = (() => {
     return out;
   };
 
-  return { pt, angleOf, arcPoints, angle, rightAngle, ticks, dot, vlabel, seg, poly, arrowDefs, plane, RAD, fbox, stepper, clock, fractionBar, fractionPie, placeValueTable, verticalMath, baseTenBlocks, cube1000, flat100, hundredToThousandStack, unitCube1, tenRod10 };
+  return { pt, angleOf, arcPoints, angle, rightAngle, ticks, dot, vlabel, seg, poly, arrowDefs, plane, RAD, fbox, stepper, clock, fractionBar, fractionPie, fracSVG, placeValueTable, verticalMath, baseTenBlocks, cube1000, flat100, hundredToThousandStack, unitCube1, tenRod10 };
 })();
 
 // 互動視覺更新後，重新排版該區塊的 MathJax

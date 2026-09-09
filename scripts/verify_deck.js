@@ -138,6 +138,7 @@ const SVstub = {
   clock: () => '<circle cx="150" cy="150" r="100"/>',
   fractionBar: () => '<g class="fraction-bar"></g>',
   fractionPie: () => '<g class="fraction-pie"></g>',
+  fracSVG: () => '<g class="frac-svg"></g>',
   placeValueTable: () => '<g class="place-value-table"></g>',
   verticalMath: () => '<g class="vertical-math"></g>',
   baseTenBlocks: () => '<g class="base-ten-blocks"></g>',

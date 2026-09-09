@@ -10,9 +10,8 @@ window.DECK = window.DECK || [];
   const C = '#0ea5e9';
   const RED = '#e11d48', GRN = '#059669', BLU = '#2563eb', VIO = '#7c3aed', AMB = '#d97706';
 
-  function svg(vb, inner) {
-    return `<div style="width:100%;text-align:center"><svg viewBox="${vb}" style="max-width:100%">${inner}</svg></div>`;
-  }
+  // HTML 原生垂直分數卡產生器（用於動態 JS 滑桿標籤，避免非同步 TeX 排版未觸發問題）
+  const hFrac = (a, b) => `<span class="mfrac"><span class="num">${a}</span><span class="den">${b}</span></span>`;
 
   window.DECK.push({
     ch: 9,
@@ -36,7 +35,7 @@ window.DECK = window.DECK || [];
               <g class="pieg"></g>
             </svg>
             <div class="ictrl" style="margin-top:8px">
-              <label>拿取片數：<span class="ival numv">3</span> 片 (＝ <span class="ival totalv">\\(\\frac{3}{4}\\)</span> 張蔥油餅)</label>
+              <label>拿取片數：<span class="ival numv">3</span> 片 (＝ <span class="ival totalv"></span> 張蔥油餅)</label>
               <input class="pie-r" type="range" min="1" max="4" step="1" value="3">
             </div>
           </div>`;
@@ -44,17 +43,16 @@ window.DECK = window.DECK || [];
           sl.oninput = () => {
             const n = +sl.value;
             numv.textContent = n;
-            totalv.innerHTML = `\\(\\frac{${n}}{4}\\)`;
-            let out = SV.fractionPie({ cx: 200, cy: 85, r: 70, total: 4, parts: n, colors: ['#0284c7', '#f1f5f9'] });
+            totalv.innerHTML = hFrac(n, 4);
+            let out = SV.fractionPie({ cx: 200, cy: 85, r: 70, total: 4, parts: n, colors: ['#0ea5e9', '#f1f5f9'] });
             for (let i = 0; i < 4; i++) {
               const ang = i * 90 + 45 - 90;
               const rad = ang * Math.PI / 180;
-              const tx = 200 + 45 * Math.cos(rad);
-              const ty = 85 + 45 * Math.sin(rad);
-              out += `<text x="${tx.toFixed(1)}" y="${(ty + 4).toFixed(1)}" text-anchor="middle" font-size="12" font-weight="900" fill="${i < n ? '#ffffff' : '#64748b'}">\\(\\frac{1}{4}\\)</text>`;
+              const tx = 200 + 48 * Math.cos(rad);
+              const ty = 85 + 48 * Math.sin(rad);
+              out += SV.fracSVG(tx, ty - 6, 1, 4, { fs: 12, c: i < n ? '#ffffff' : '#475569' });
             }
             pieg.innerHTML = out;
-            if (window.MJ) window.MJ(pieg);
           };
           sl.oninput();
         },
@@ -109,7 +107,7 @@ window.DECK = window.DECK || [];
               <g class="fullg"></g>
             </svg>
             <div class="ictrl" style="margin-top:8px">
-              <label>累積片數：<span class="ival numv">4</span> 片 (＝ <span class="ival totalv">\\(\\frac{4}{4} = 1\\)</span>)</label>
+              <label>累積片數：<span class="ival numv">4</span> 片 (＝ <span class="ival totalv"></span>)</label>
               <input class="full-r" type="range" min="1" max="4" step="1" value="4">
             </div>
           </div>`;
@@ -117,10 +115,10 @@ window.DECK = window.DECK || [];
           sl.oninput = () => {
             const n = +sl.value;
             numv.textContent = n;
-            totalv.innerHTML = n === 4 ? `\\(\\frac{4}{4} = 1\\)` : `\\(\\frac{${n}}{4}\\)`;
-            let out = SV.fractionPie({ cx: 200, cy: 80, r: 65, total: 4, parts: n, colors: [n === 4 ? '#059669' : '#0284c7', '#f1f5f9'] });
-            out += `<rect x="290" y="55" width="95" height="50" rx="10" fill="${n === 4 ? '#ecfdf5' : '#eff6ff'}" stroke="${n === 4 ? '#059669' : '#0284c7'}" stroke-width="1.8"/>`;
-            out += `<text x="337" y="85" text-anchor="middle" font-size="16" font-weight="900" fill="${n === 4 ? '#059669' : '#0284c7'}">${n === 4 ? '等於 1 張！' : n + ' / 4'}</text>`;
+            totalv.innerHTML = n === 4 ? `${hFrac(4, 4)} ＝ 1` : hFrac(n, 4);
+            let out = SV.fractionPie({ cx: 200, cy: 80, r: 65, total: 4, parts: n, colors: [n === 4 ? '#059669' : '#0ea5e9', '#f1f5f9'] });
+            out += `<rect x="290" y="55" width="95" height="50" rx="10" fill="${n === 4 ? '#ecfdf5' : '#eff6ff'}" stroke="${n === 4 ? '#059669' : '#0ea5e9'}" stroke-width="1.8"/>`;
+            out += `<text x="337" y="85" text-anchor="middle" font-size="15" font-weight="900" fill="${n === 4 ? '#059669' : '#0ea5e9'}">${n === 4 ? '等於 1 張！' : n + ' / 4'}</text>`;
             fullg.innerHTML = out;
           };
           sl.oninput();
@@ -151,7 +149,7 @@ window.DECK = window.DECK || [];
               <g class="boxg"></g>
             </svg>
             <div class="ictrl" style="margin-top:8px">
-              <label>拿取果凍：<span class="ival numv">3</span> 個 (＝ <span class="ival totalv">\\(\\frac{3}{10}\\)</span> 盒)</label>
+              <label>拿取果凍：<span class="ival numv">3</span> 個 (＝ <span class="ival totalv"></span> 盒)</label>
               <input class="box-r" type="range" min="1" max="10" step="1" value="3">
             </div>
           </div>`;
@@ -159,16 +157,16 @@ window.DECK = window.DECK || [];
           sl.oninput = () => {
             const n = +sl.value;
             numv.textContent = n;
-            totalv.innerHTML = `\\(\\frac{${n}}{10}\\)`;
-            let out = `<rect x="30" y="20" width="340" height="110" rx="12" fill="#ffffff" stroke="#0284c7" stroke-width="2.2"/>`;
-            out += `<text x="200" y="40" text-anchor="middle" font-size="13" font-weight="900" fill="#0284c7">【一盒果凍（10 個裝）】</text>`;
+            totalv.innerHTML = hFrac(n, 10);
+            let out = `<rect x="30" y="20" width="340" height="110" rx="12" fill="#ffffff" stroke="#0ea5e9" stroke-width="2.2"/>`;
+            out += `<text x="200" y="40" text-anchor="middle" font-size="13" font-weight="900" fill="#0ea5e9">【一盒果凍（10 個裝）】</text>`;
             for (let i = 0; i < 10; i++) {
               const col = i % 5;
               const row = Math.floor(i / 5);
               const cx = 65 + col * 68;
               const cy = 62 + row * 42;
               const isEaten = i < n;
-              out += `<circle cx="${cx}" cy="${cy}" r="17" fill="${isEaten ? '#0284c7' : '#e2e8f0'}" stroke="${isEaten ? '#0369a1' : '#cbd5e1'}" stroke-width="1.6"/>`;
+              out += `<circle cx="${cx}" cy="${cy}" r="17" fill="${isEaten ? '#0ea5e9' : '#e2e8f0'}" stroke="${isEaten ? '#0284c7' : '#cbd5e1'}" stroke-width="1.6"/>`;
               out += `<text x="${cx}" y="${cy + 5}" text-anchor="middle" font-size="11" font-weight="900" fill="${isEaten ? '#ffffff' : '#64748b'}">${i + 1}</text>`;
             }
             boxg.innerHTML = out;
@@ -226,7 +224,7 @@ window.DECK = window.DECK || [];
               <g class="ribg"></g>
             </svg>
             <div class="ictrl" style="margin-top:8px">
-              <label>彩帶長度：<span class="ival numv">5</span> 份 (＝ <span class="ival totalv">\\(\\frac{5}{10}\\)</span> 公尺)</label>
+              <label>彩帶長度：<span class="ival numv">5</span> 份 (＝ <span class="ival totalv"></span> 公尺)</label>
               <input class="rib-r" type="range" min="1" max="10" step="1" value="5">
             </div>
           </div>`;
@@ -234,10 +232,11 @@ window.DECK = window.DECK || [];
           sl.oninput = () => {
             const n = +sl.value;
             numv.textContent = n;
-            totalv.innerHTML = `\\(\\frac{${n}}{10}\\)`;
-            let out = SV.fractionBar({ x: 20, y: 55, w: 360, h: 45, total: 10, parts: n, colors: ['#0284c7', '#f1f5f9'] });
-            out += `<text x="200" y="30" text-anchor="middle" font-size="14" font-weight="900" fill="#0284c7">【1 公尺彩帶】</text>`;
-            out += `<text x="${(20 + n * 36).toFixed(1)}" y="125" text-anchor="middle" font-size="13" font-weight="900" fill="#e11d48">\\(\\frac{${n}}{10}\\) 公尺</text>`;
+            totalv.innerHTML = hFrac(n, 10);
+            let out = SV.fractionBar({ x: 20, y: 55, w: 360, h: 45, total: 10, parts: n, colors: ['#0ea5e9', '#f1f5f9'] });
+            out += `<text x="200" y="30" text-anchor="middle" font-size="14" font-weight="900" fill="#0ea5e9">【1 公尺彩帶】</text>`;
+            out += SV.fracSVG((20 + n * 36), 115, n, 10, { fs: 12, c: '#e11d48' });
+            out += `<text x="${(20 + n * 36 + 26).toFixed(1)}" y="128" font-size="12" font-weight="900" fill="#e11d48">公尺</text>`;
             ribg.innerHTML = out;
           };
           sl.oninput();
@@ -267,7 +266,7 @@ window.DECK = window.DECK || [];
               <g class="lineg"></g>
             </svg>
             <div class="ictrl" style="margin-top:8px">
-              <label>數線位置：<span class="ival numv">7</span> (＝ <span class="ival totalv">\\(\\frac{7}{10}\\)</span>)</label>
+              <label>數線位置：<span class="ival numv">7</span> (＝ <span class="ival totalv"></span>)</label>
               <input class="line-r" type="range" min="1" max="10" step="1" value="7">
             </div>
           </div>`;
@@ -275,19 +274,24 @@ window.DECK = window.DECK || [];
           sl.oninput = () => {
             const n = +sl.value;
             numv.textContent = n;
-            totalv.innerHTML = `\\(\\frac{${n}}{10}\\)`;
+            totalv.innerHTML = hFrac(n, 10);
             const startX = 30, endX = 370, y = 75, w = endX - startX, stepW = w / 10;
-            let out = SV.seg(startX, y, endX, y, '#0284c7', 3);
+            let out = SV.seg(startX, y, endX, y, '#0ea5e9', 3);
             for (let i = 0; i <= 10; i++) {
               const tx = startX + i * stepW;
-              out += `<line x1="${tx}" y1="${y - 8}" x2="${tx}" y2="${y + 8}" stroke="#0284c7" stroke-width="${i === 0 || i === 10 ? 2.5 : 1.5}"/>`;
-              const lbl = i === 0 ? '0' : (i === 10 ? '1 (\\(\\frac{10}{10}\\))' : `\\(\\frac{${i}}{10}\\)`);
-              out += `<text x="${tx}" y="${y + 26}" text-anchor="middle" font-size="11" font-weight="${i === n ? '900' : '700'}" fill="${i === n ? '#e11d48' : '#334155'}">${lbl}</text>`;
+              out += `<line x1="${tx}" y1="${y - 8}" x2="${tx}" y2="${y + 8}" stroke="#0ea5e9" stroke-width="${i === 0 || i === 10 ? 2.5 : 1.5}"/>`;
+              if (i === 0) {
+                out += `<text x="${tx}" y="${y + 26}" text-anchor="middle" font-size="11" font-weight="800" fill="#334155">0</text>`;
+              } else if (i === 10) {
+                out += `<text x="${tx}" y="${y + 26}" text-anchor="middle" font-size="11" font-weight="800" fill="#334155">1 (10/10)</text>`;
+              } else {
+                out += SV.fracSVG(tx, y + 16, i, 10, { fs: 10, c: i === n ? '#e11d48' : '#334155' });
+              }
             }
             const dotX = startX + n * stepW;
             out += SV.dot(dotX, y, '#e11d48', 7);
             out += `<path d="M${startX},${y - 18} L${dotX},${y - 18}" stroke="#e11d48" stroke-width="2.5" stroke-dasharray="4,3"/>`;
-            out += `<text x="${(startX + dotX) / 2}" y="${y - 25}" text-anchor="middle" font-size="13" font-weight="900" fill="#e11d48">\\(\\frac{${n}}{10}\\)</text>`;
+            out += SV.fracSVG((startX + dotX) / 2, y - 36, n, 10, { fs: 12, c: '#e11d48' });
             lineg.innerHTML = out;
           };
           sl.oninput();
@@ -318,7 +322,7 @@ window.DECK = window.DECK || [];
               <g class="cmpg"></g>
             </svg>
             <div class="ictrl" style="margin-top:8px">
-              <label>詠安吃的份數：<span class="ival numv">4</span> 份 (＝ <span class="ival totalv">\\(\\frac{4}{5}\\)</span> 條)</label>
+              <label>詠安吃的份數：<span class="ival numv">4</span> 份 (＝ <span class="ival totalv"></span> 條)</label>
               <input class="cmp-r" type="range" min="1" max="5" step="1" value="4">
             </div>
           </div>`;
@@ -326,15 +330,15 @@ window.DECK = window.DECK || [];
           sl.oninput = () => {
             const n = +sl.value;
             numv.textContent = n;
-            totalv.innerHTML = `\\(\\frac{${n}}{5}\\)`;
-            let out = `<text x="25" y="42" font-size="13" font-weight="900" fill="#0284c7">思妤 (\\(\\frac{2}{5}\\)):</text>`;
-            out += SV.fractionBar({ x: 100, y: 25, w: 260, h: 30, total: 5, parts: 2, colors: ['#0284c7', '#f1f5f9'] });
-            out += `<text x="25" y="92" font-size="13" font-weight="900" fill="#e11d48">詠安 (\\(\\frac{${n}}{5}\\)):</text>`;
+            totalv.innerHTML = hFrac(n, 5);
+            let out = `<text x="25" y="42" font-size="13" font-weight="900" fill="#0ea5e9">思妤 (2/5):</text>`;
+            out += SV.fractionBar({ x: 100, y: 25, w: 260, h: 30, total: 5, parts: 2, colors: ['#0ea5e9', '#f1f5f9'] });
+            out += `<text x="25" y="92" font-size="13" font-weight="900" fill="#e11d48">詠安 (${n}/5):</text>`;
             out += SV.fractionBar({ x: 100, y: 75, w: 260, h: 30, total: 5, parts: n, colors: ['#e11d48', '#f1f5f9'] });
             const isMore = n > 2;
             const isEqual = n === 2;
-            const sym = isEqual ? '=' : (isMore ? '>' : '<');
-            out += `<text x="200" y="145" text-anchor="middle" font-size="16" font-weight="900" fill="${isMore ? '#e11d48' : '#0284c7'}">\\(\\frac{${n}}{5} ${sym} \\frac{2}{5}\\) ${isEqual ? '（一樣多）' : (isMore ? '（詠安比較多）' : '（思妤比較多）')}</text>`;
+            const sym = isEqual ? '＝' : (isMore ? '＞' : '＜');
+            out += `<text x="200" y="145" text-anchor="middle" font-size="16" font-weight="900" fill="${isMore ? '#e11d48' : '#0ea5e9'}">${n}/5 ${sym} 2/5 ${isEqual ? '（一樣多）' : (isMore ? '（詠安比較多）' : '（思妤比較多）')}</text>`;
             cmpg.innerHTML = out;
           };
           sl.oninput();
@@ -386,7 +390,7 @@ window.DECK = window.DECK || [];
         visual: (h) => {
           h.innerHTML = `<div style="width:100%;text-align:center">
             <table style="width:95%;margin:auto;border-collapse:collapse;font-size:14.5px;text-align:center;box-shadow:0 4px 12px rgba(0,0,0,0.06)">
-              <tr style="background:#0284c7;color:#fff;font-weight:700">
+              <tr style="background:#0ea5e9;color:#fff;font-weight:700">
                 <th style="padding:8px;border:1px solid #cbd5e1">題目條件</th>
                 <th style="padding:8px;border:1px solid #cbd5e1">常見迷思 (✗)</th>
                 <th style="padding:8px;border:1px solid #cbd5e1">正確觀念 (✓)</th>
