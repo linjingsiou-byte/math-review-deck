@@ -96,6 +96,57 @@ window.DECK = window.DECK || [];
       {
         sec: '9-1',
         secName: '幾分之幾（一）',
+        title: '【易錯陷阱】只有「平分」才能用分數表示！',
+        points: [
+          '✗ <span style="color:#e11d48">隨意分成 4 塊</span>（大小不同）：每一塊<b>不能</b>稱為 \\(\\frac{1}{4}\\)！',
+          '✓ <span style="color:#059669">公平平分成 4 等份</span>（大小相同）：每一塊才可以記作 <span class="k">\\(\\frac{1}{4}\\)</span>。'
+        ],
+        visual: (h) => {
+          h.innerHTML = `<div style="width:100%;text-align:center;padding:4px">
+            <svg viewBox="0 0 420 180" style="max-width:100%">
+              <!-- 錯誤示範 (非平分) -->
+              <g transform="translate(10, 10)">
+                <rect width="190" height="160" rx="12" fill="#fff1f2" stroke="#fda4af" stroke-width="2"/>
+                <text x="95" y="28" text-anchor="middle" font-size="14" font-weight="900" fill="#e11d48">✗ 隨意切割（大小不同）</text>
+                <!-- 一大一小圓弧示意 -->
+                <circle cx="95" cy="90" r="45" fill="#e2e8f0" stroke="#94a3b8" stroke-width="2"/>
+                <path d="M 95 45 L 95 135 M 95 90 L 140 90 M 95 90 L 60 120" stroke="#e11d48" stroke-width="2.5"/>
+                <!-- 鋪色其中一片特別大 -->
+                <path d="M 95 90 L 95 45 A 45 45 0 0 1 140 90 Z" fill="rgba(225,29,72,0.3)"/>
+                <rect x="25" y="125" width="140" height="24" rx="6" fill="#e11d48"/>
+                <text x="95" y="141" text-anchor="middle" font-size="12" font-weight="900" fill="#ffffff">❌ 不能叫 1/4 張！</text>
+              </g>
+
+              <!-- 正確示範 (公平平分) -->
+              <g transform="translate(220, 10)">
+                <rect width="190" height="160" rx="12" fill="#f0fdf4" stroke="#86efac" stroke-width="2"/>
+                <text x="95" y="28" text-anchor="middle" font-size="14" font-weight="900" fill="#059669">✓ 公平平分 4 等份</text>
+                <circle cx="95" cy="90" r="45" fill="#e2e8f0" stroke="#94a3b8" stroke-width="2"/>
+                <line x1="95" y1="45" x2="95" y2="135" stroke="#059669" stroke-width="2.5"/>
+                <line x1="50" y1="90" x2="140" y2="90" stroke="#059669" stroke-width="2.5"/>
+                <!-- 鋪色其中一片正 90 度 -->
+                <path d="M 95 90 L 95 45 A 45 45 0 0 0 50 90 Z" fill="rgba(5,150,105,0.3)"/>
+                <rect x="25" y="125" width="140" height="24" rx="6" fill="#059669"/>
+                <text x="95" y="141" text-anchor="middle" font-size="12" font-weight="900" fill="#ffffff">✅ 每一片都是 1/4 張！</text>
+              </g>
+            </svg>
+          </div>`;
+        },
+        caption: '牢記 108 課綱分數核心觀念：「平分（等分）」是分數的前提！未平分不能使用分數名稱！',
+        example: {
+          q: '哥哥把一張大披薩切成 4 塊，小明拿了最大塊的那一片，說自己吃了 1/4 個披薩，這句話對嗎？',
+          steps: [
+            '1. 分數的前提是「每一份都要一樣大（平分）」。',
+            '2. 既然切成一大一小，就沒有平分。',
+            '3. 所以不能說是 1/4 個披薩。'
+          ],
+          ans: '不對！因為沒有公平平分，不能稱為 1/4 個披薩。'
+        }
+      },
+
+      {
+        sec: '9-1',
+        secName: '幾分之幾（一）',
         title: `4個 ${hFrac(1, 4)} 就是 ${hFrac(4, 4)}，等於 1 個整體`,
         points: [
           '4 片 \\(\\frac{1}{4}\\) 張蔥油餅合起來是 <span class="k">\\(\\frac{4}{4}\\) 張</span>。',

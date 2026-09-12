@@ -178,13 +178,43 @@
   // ---- 封面章節卡 ----
   (function buildCover() {
     const host = $('coverChapters');
+    if (!host) return;
+    host.innerHTML = '';
     DECK.forEach(c => {
       const card = document.createElement('div');
       card.className = 'cover-card';
       card.style.setProperty('--ct', c.color);
-      card.innerHTML = `<div class="cc-num">第 ${c.ch} 章</div>
-        <div class="cc-title">${c.title}</div>
-        <div class="cc-list">${c.sections.join('　')}</div>`;
+
+      // 找到該章第一頁（divider 頁）
+      const chapStartIdx = flat.findIndex(item => item.ch === c.ch);
+
+      // 處理每個單元跳轉超連結
+      const secHtml = c.sections.map(secStr => {
+        const secStartIdx = flat.findIndex(s => s.ch === c.ch && s.type === 'slide' && (secStr.includes(s.sec) || (s.sec && secStr.startsWith(s.sec))));
+        const targetIdx = secStartIdx !== -1 ? secStartIdx : chapStartIdx;
+        return `<span class="cc-sec-link" data-idx="${targetIdx}">${secStr}</span>`;
+      }).join('　');
+
+      card.innerHTML = `<div class="cc-header" data-idx="${chapStartIdx}">
+          <div class="cc-num">第 ${c.ch} 章</div>
+          <div class="cc-title">${c.title}</div>
+        </div>
+        <div class="cc-list">${secHtml}</div>`;
+
+      // 點擊章標題或單元進行頁面跳轉與切換
+      card.onclick = (e) => {
+        const link = e.target.closest('[data-idx]');
+        if (link) {
+          const targetIndex = parseInt(link.dataset.idx, 10);
+          if (!isNaN(targetIndex)) {
+            $('cover').classList.add('hidden');
+            $('app').classList.remove('hidden');
+            fitPen();
+            go(targetIndex);
+          }
+        }
+      };
+
       host.appendChild(card);
     });
   })();
@@ -230,12 +260,26 @@
 
     if (s.type === 'divider') {
       slideEl.className = 'slide divider';
+      const secChips = s.sections.map(secStr => {
+        const secStartIdx = flat.findIndex(item => item.ch === s.ch && item.type === 'slide' && (secStr.includes(item.sec) || (item.sec && secStr.startsWith(item.sec))));
+        return `<span class="dv-chip clickable" data-idx="${secStartIdx !== -1 ? secStartIdx : idx}">${secStr}</span>`;
+      }).join('');
+      
       slideEl.innerHTML = `
         <div>
           <div class="dv-num">第 ${s.ch} 章</div>
           <div class="dv-title">${renderTitle(s.title)}</div>
-          <div class="dv-list">${s.sections.map(x => `<span class="dv-chip">${x}</span>`).join('')}</div>
+          <div class="dv-list">${secChips}</div>
         </div>`;
+
+      // 幫 divider 內的 chips 綁定點擊事件
+      slideEl.querySelectorAll('.dv-chip.clickable').forEach(chip => {
+        chip.onclick = () => {
+          const targetIndex = parseInt(chip.dataset.idx, 10);
+          if (!isNaN(targetIndex)) go(targetIndex);
+        };
+      });
+
       crumbEl.innerHTML = `第 ${s.ch} 章　<b>${renderTitle(s.title)}</b>`;
     } else {
       slideEl.className = 'slide';
