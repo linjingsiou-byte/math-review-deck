@@ -34,14 +34,18 @@ window.DECK = window.DECK || [];
             <svg viewBox="0 0 400 170" style="max-width:100%">
               <g class="pieg"></g>
             </svg>
-            <div class="ictrl" style="margin-top:8px">
+            <div class="ictrl" style="margin-top:6px; display:flex; flex-wrap:wrap; justify-content:center; gap:8px;">
               <label>拿取片數：<span class="ival numv">3</span> 片 (＝ <span class="ival totalv"></span> 張蔥油餅)</label>
-              <input class="pie-r" type="range" min="1" max="4" step="1" value="3">
+              <input class="pie-r" type="range" min="1" max="4" step="1" value="3" style="width:140px;">
+              <button class="add-slice-btn" style="padding:4px 10px; border-radius:6px; border:1.5px solid #0ea5e9; background:#f0f9ff; color:#0ea5e9; font-weight:900; font-size:12px; cursor:pointer;">🍕 點擊拿取 1 片 (1/4)</button>
+              <button class="fill-pie-btn" style="padding:4px 10px; border-radius:6px; border:1.5px solid #059669; background:#ecfdf5; color:#059669; font-weight:900; font-size:12px; cursor:pointer;">✨ 擺滿餐盤 (4/4=1)</button>
             </div>
           </div>`;
           const sl = h.querySelector('.pie-r'), numv = h.querySelector('.numv'), totalv = h.querySelector('.totalv'), pieg = h.querySelector('.pieg');
-          sl.oninput = () => {
-            const n = +sl.value;
+          const addBtn = h.querySelector('.add-slice-btn'), fillBtn = h.querySelector('.fill-pie-btn');
+
+          const update = (n) => {
+            sl.value = n;
             numv.textContent = n;
             totalv.innerHTML = hFrac(n, 4);
             let out = SV.fractionPie({ cx: 200, cy: 85, r: 70, total: 4, parts: n, colors: ['#0ea5e9', '#f1f5f9'] });
@@ -52,9 +56,23 @@ window.DECK = window.DECK || [];
               const ty = 85 + 48 * Math.sin(rad);
               out += SV.fracSVG(tx, ty - 6, 1, 4, { fs: 12, c: i < n ? '#ffffff' : '#475569' });
             }
+            if (n === 4) {
+              out += `<rect x="300" y="20" width="90" height="42" fill="#ecfdf5" stroke="#059669" stroke-width="2" rx="8"/>`;
+              out += `<text x="345" y="38" text-anchor="middle" font-size="11" font-weight="900" fill="#059669">🎉 擺滿 4/4</text>`;
+              out += `<text x="345" y="54" text-anchor="middle" font-size="12" font-weight="900" fill="#e11d48">等於 1 張！</text>`;
+            }
             pieg.innerHTML = out;
           };
-          sl.oninput();
+
+          sl.oninput = () => update(+sl.value);
+          addBtn.onclick = () => {
+            let n = +sl.value + 1;
+            if (n > 4) n = 1;
+            update(n);
+          };
+          fillBtn.onclick = () => update(4);
+
+          update(3);
         },
         caption: '拖動滑桿，觀察平分成 4 片時，1片、2片、3片、4片代表的分數。',
         example: {
@@ -199,30 +217,56 @@ window.DECK = window.DECK || [];
             <svg viewBox="0 0 400 160" style="max-width:100%">
               <g class="boxg"></g>
             </svg>
-            <div class="ictrl" style="margin-top:8px">
+            <div class="ictrl" style="margin-top:6px; display:flex; flex-wrap:wrap; justify-content:center; gap:8px;">
               <label>拿取果凍：<span class="ival numv">3</span> 個 (＝ <span class="ival totalv"></span> 盒)</label>
-              <input class="box-r" type="range" min="1" max="10" step="1" value="3">
+              <input class="box-r" type="range" min="0" max="10" step="1" value="3" style="width:120px;">
+              <button class="add-jelly-btn" style="padding:4px 10px; border-radius:6px; border:1.5px solid #0ea5e9; background:#f0f9ff; color:#0ea5e9; font-weight:900; font-size:12px; cursor:pointer;">🍮 點擊＋1 個</button>
+              <button class="clear-jelly-btn" style="padding:4px 10px; border-radius:6px; border:1.5px solid #cbd5e1; background:#fff; color:#64748b; font-weight:800; font-size:12px; cursor:pointer;">🔄 清空</button>
             </div>
           </div>`;
           const sl = h.querySelector('.box-r'), numv = h.querySelector('.numv'), totalv = h.querySelector('.totalv'), boxg = h.querySelector('.boxg');
-          sl.oninput = () => {
-            const n = +sl.value;
+          const addBtn = h.querySelector('.add-jelly-btn'), clearBtn = h.querySelector('.clear-jelly-btn');
+
+          const update = (n) => {
+            sl.value = n;
             numv.textContent = n;
             totalv.innerHTML = hFrac(n, 10);
-            let out = `<rect x="30" y="20" width="340" height="110" rx="12" fill="#ffffff" stroke="#0ea5e9" stroke-width="2.2"/>`;
-            out += `<text x="200" y="40" text-anchor="middle" font-size="13" font-weight="900" fill="#0ea5e9">【一盒果凍（10 個裝）】</text>`;
+            let out = `<rect x="30" y="15" width="340" height="130" rx="12" fill="#ffffff" stroke="#0ea5e9" stroke-width="2.2"/>`;
+            out += `<text x="200" y="35" text-anchor="middle" font-size="13" font-weight="900" fill="#0ea5e9">【一盒果凍（10 個裝）— 點擊果凍可直接選取】</text>`;
             for (let i = 0; i < 10; i++) {
               const col = i % 5;
               const row = Math.floor(i / 5);
               const cx = 65 + col * 68;
-              const cy = 62 + row * 42;
+              const cy = 60 + row * 40;
               const isEaten = i < n;
-              out += `<circle cx="${cx}" cy="${cy}" r="17" fill="${isEaten ? '#0ea5e9' : '#e2e8f0'}" stroke="${isEaten ? '#0284c7' : '#cbd5e1'}" stroke-width="1.6"/>`;
+              out += `<g cursor="pointer" class="jelly-g" data-i="${i}">`;
+              out += `<circle cx="${cx}" cy="${cy}" r="16" fill="${isEaten ? '#0ea5e9' : '#f1f5f9'}" stroke="${isEaten ? '#0284c7' : '#cbd5e1'}" stroke-width="1.8"/>`;
               out += `<text x="${cx}" y="${cy + 5}" text-anchor="middle" font-size="11" font-weight="900" fill="${isEaten ? '#ffffff' : '#64748b'}">${i + 1}</text>`;
+              out += `</g>`;
             }
+
+            // 下方雙向單位對比卡
+            out += `<rect x="60" y="112" width="130" height="26" rx="6" fill="#eff6ff" stroke="#3b82f6" stroke-width="1.2"/>`;
+            out += `<text x="125" y="129" text-anchor="middle" font-size="12" font-weight="900" fill="#1d4ed8">個數：${n} 個</text>`;
+
+            out += `<rect x="210" y="112" width="130" height="26" rx="6" fill="#f0fdf4" stroke="#059669" stroke-width="1.2"/>`;
+            out += `<text x="275" y="129" text-anchor="middle" font-size="12" font-weight="900" fill="#059669">分數：${n}/10 盒</text>`;
+
             boxg.innerHTML = out;
+
+            boxg.querySelectorAll('.jelly-g').forEach(g => {
+              g.onclick = () => {
+                const idx = parseInt(g.dataset.i, 10);
+                update(idx >= n ? idx + 1 : idx);
+              };
+            });
           };
-          sl.oninput();
+
+          sl.oninput = () => update(+sl.value);
+          addBtn.onclick = () => update(Math.min(10, +sl.value + 1));
+          clearBtn.onclick = () => update(0);
+
+          update(3);
         },
         caption: '拖動滑桿，觀察個數（顆/個）與盒裝分數之間的轉換對應。',
         example: {
@@ -358,43 +402,62 @@ window.DECK = window.DECK || [];
         }
       },
 
-      /* ---------- 9-4 同分母分數的大小比較 ---------- */
+      /* ---------- 9-4 同分母分數的大小比較（升級：雙滑桿對照） ---------- */
       {
         sec: '9-4',
         secName: '同分母分數的大小比較',
-        title: '同分母分數比較：條形長度越長，分數越大',
+        title: '【雙滑桿比較】同分母分數：條形長度越長，分數越大',
         points: [
-          '思妤吃了 <span class="k">\\(\\frac{2}{5}\\) 條壽司</span>，詠安吃了 <span class="k">\\(\\frac{4}{5}\\) 條壽司</span>。',
-          '因為 4 份比 2 份長，所以 <span class="k">\\(\\frac{4}{5} > \\frac{2}{5}\\)</span>（詠安吃的比較多）。'
+          '分別拉動「思妤」與「詠安」的滑桿，自由調整兩人各吃了幾份。',
+          '條形圖即時比較，分數大小符號（＞ ＝ ＜）自動顯示！',
+          '同分母時只要看<span class="k">分子大小</span>即可：分子越大，分數越大。'
         ],
         visual: (h) => {
-          h.innerHTML = `<div style="width:100%;text-align:center;padding:4px">
-            <svg viewBox="0 0 400 160" style="max-width:100%">
-              <g class="cmpg"></g>
-            </svg>
-            <div class="ictrl" style="margin-top:8px">
-              <label>詠安吃的份數：<span class="ival numv">4</span> 份 (＝ <span class="ival totalv"></span> 條)</label>
-              <input class="cmp-r" type="range" min="1" max="5" step="1" value="4">
+          h.innerHTML = `<div style="width:100%; font-family:sans-serif;">
+            <div id="cmpStage" style="background:#f8fafc; border:1px solid #cbd5e1; border-radius:10px; padding:10px; height:165px;"></div>
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:10px;">
+              <div class="ictrl" style="margin:0;">
+                <label style="color:#0ea5e9; font-weight:900;">思妤吃了：<span id="numA">2</span>/5 條</label>
+                <input type="range" id="slA" min="1" max="5" step="1" value="2" style="width:100%; accent-color:#0ea5e9;">
+              </div>
+              <div class="ictrl" style="margin:0;">
+                <label style="color:#e11d48; font-weight:900;">詠安吃了：<span id="numB">4</span>/5 條</label>
+                <input type="range" id="slB" min="1" max="5" step="1" value="4" style="width:100%; accent-color:#e11d48;">
+              </div>
             </div>
           </div>`;
-          const sl = h.querySelector('.cmp-r'), numv = h.querySelector('.numv'), totalv = h.querySelector('.totalv'), cmpg = h.querySelector('.cmpg');
-          sl.oninput = () => {
-            const n = +sl.value;
-            numv.textContent = n;
-            totalv.innerHTML = hFrac(n, 5);
-            let out = `<text x="25" y="42" font-size="13" font-weight="900" fill="#0ea5e9">思妤 (2/5):</text>`;
-            out += SV.fractionBar({ x: 100, y: 25, w: 260, h: 30, total: 5, parts: 2, colors: ['#0ea5e9', '#f1f5f9'] });
-            out += `<text x="25" y="92" font-size="13" font-weight="900" fill="#e11d48">詠安 (${n}/5):</text>`;
-            out += SV.fractionBar({ x: 100, y: 75, w: 260, h: 30, total: 5, parts: n, colors: ['#e11d48', '#f1f5f9'] });
-            const isMore = n > 2;
-            const isEqual = n === 2;
-            const sym = isEqual ? '＝' : (isMore ? '＞' : '＜');
-            out += `<text x="200" y="145" text-anchor="middle" font-size="16" font-weight="900" fill="${isMore ? '#e11d48' : '#0ea5e9'}">${n}/5 ${sym} 2/5 ${isEqual ? '（一樣多）' : (isMore ? '（詠安比較多）' : '（思妤比較多）')}</text>`;
-            cmpg.innerHTML = out;
-          };
-          sl.oninput();
+
+          const slA = h.querySelector('#slA'), slB = h.querySelector('#slB');
+          const numA = h.querySelector('#numA'), numB = h.querySelector('#numB');
+          const stage = h.querySelector('#cmpStage');
+
+          function renderCmp() {
+            const a = +slA.value, b = +slB.value;
+            numA.textContent = a; numB.textContent = b;
+            const sym = a === b ? '＝' : (a > b ? '＞' : '＜');
+            const symColor = a === b ? '#d97706' : (a > b ? '#0ea5e9' : '#e11d48');
+            const winner = a === b ? '一樣多！' : (a > b ? '思妤比較多！' : '詠安比較多！');
+
+            let out = '';
+            out += `<text x="20" y="38" font-size="13" font-weight="900" fill="#0ea5e9">思妤 (${a}/5):</text>`;
+            out += SV.fractionBar({ x: 105, y: 20, w: 250, h: 28, total: 5, parts: a, colors: ['#0ea5e9', '#e2f4fd'] });
+
+            out += `<text x="20" y="92" font-size="13" font-weight="900" fill="#e11d48">詠安 (${b}/5):</text>`;
+            out += SV.fractionBar({ x: 105, y: 74, w: 250, h: 28, total: 5, parts: b, colors: ['#e11d48', '#fff1f2'] });
+
+            // 比較符號
+            out += `<rect x="70" y="108" width="255" height="44" rx="10" fill="${a === b ? '#fef3c7' : '#f0fdf4'}" stroke="${symColor}" stroke-width="2"/>`;
+            out += `<text x="197" y="127" text-anchor="middle" font-size="13.5" font-weight="900" fill="#0f172a">${a}/5  <tspan fill="${symColor}" font-size="20">${sym}</tspan>  ${b}/5</text>`;
+            out += `<text x="197" y="146" text-anchor="middle" font-size="13" font-weight="900" fill="${symColor}">${winner}</text>`;
+
+            stage.innerHTML = `<svg viewBox="0 0 370 160" style="width:100%; height:100%;">${out}</svg>`;
+          }
+
+          slA.oninput = renderCmp;
+          slB.oninput = renderCmp;
+          renderCmp();
         },
-        caption: '觀察長條圖：塗色長度越長，代表的分數就越大！',
+        caption: '觀察長條圖：塗色長度越長，代表的分數就越大！同分母時只比較分子。',
         example: {
           q: '承恩吃了 \\(\\frac{5}{8}\\) 個披薩，子晴吃了 \\(\\frac{3}{8}\\) 個披薩，誰吃的比較多？',
           steps: [
@@ -404,6 +467,7 @@ window.DECK = window.DECK || [];
           ans: '承恩吃的比較多'
         }
       },
+
 
       {
         sec: '9-4',

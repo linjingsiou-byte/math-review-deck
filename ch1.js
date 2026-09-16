@@ -36,19 +36,28 @@ window.DECK = window.DECK || [];
             <svg viewBox="0 0 400 210" style="max-width:100%">
               <g class="stackg"></g>
             </svg>
-            <div class="ictrl">
+            <div class="ictrl" style="display:flex; flex-wrap:wrap; justify-content:center; gap:8px;">
               <label>百格積木數量：<span class="ival numv">10</span> 個 (＝ <span class="ival totalv">1000</span>)</label>
-              <input class="num-r" type="range" min="1" max="10" step="1" value="10">
+              <input class="num-r" type="range" min="1" max="10" step="1" value="10" style="width:160px;">
+              <button class="merge-btn" style="padding:4px 10px; border-radius:6px; border:1.5px solid #2563eb; background:#eff6ff; color:#2563eb; font-weight:900; font-size:12px; cursor:pointer;">✨ 點擊合體 (1000)</button>
+              <button class="split-btn" style="padding:4px 10px; border-radius:6px; border:1.5px solid #e11d48; background:#fff1f2; color:#e11d48; font-weight:900; font-size:12px; cursor:pointer;">💥 點擊拆解 (10個百)</button>
             </div>
           </div>`;
           const sl = h.querySelector('.num-r'), numv = h.querySelector('.numv'), totalv = h.querySelector('.totalv'), stackg = h.querySelector('.stackg');
-          sl.oninput = () => {
-            const n = +sl.value;
+          const mergeBtn = h.querySelector('.merge-btn'), splitBtn = h.querySelector('.split-btn');
+
+          const update = (n) => {
+            sl.value = n;
             numv.textContent = n;
             totalv.textContent = n * 100;
             stackg.innerHTML = SV.hundredToThousandStack({ x: 30, y: 75, n: n, s: 75, color: '#2563eb' });
           };
-          sl.oninput();
+
+          sl.oninput = () => update(+sl.value);
+          mergeBtn.onclick = () => update(10);
+          splitBtn.onclick = () => update(1);
+
+          update(10);
         },
         caption: '拖動滑桿，觀察 10 個百格板堆疊合體成 1 個立體千格大積木！',
         example: {
@@ -180,29 +189,104 @@ window.DECK = window.DECK || [];
       {
         sec: '1-1',
         secName: '認識10000以內的數',
-        title: '中間有零讀一個零，末尾的零不讀',
+        title: '【點擊高亮】中間有零讀一個零，末尾的零不讀',
         points: [
           '數字中間有零時，<span class="k">只讀出一個「零」</span>（如 3005 讀作三千零五）。',
-          '數字末尾的零，<span class="k">完全不必讀出來</span>（如 3700 讀作三千七百）。'
+          '數字末尾的零，<span class="k">完全不必讀出來</span>（如 3700 讀作三千七百）。',
+          '點擊下方數字卡片，看每個位置的「0」要不要讀！'
         ],
         visual: (h) => {
-          h.innerHTML = SV.fbox([
-            { label: '中間有零', tex: '3005 \\longrightarrow \\text{三千零五}', color: RED, fill: '#fff1f2', note: '連續兩個零只讀一個「零」' },
-            { label: '末尾有零', tex: '3700 \\longrightarrow \\text{三千七百}', color: GRN, fill: '#f0fdf4', note: '末尾的零都不讀' },
-            { label: '中間與末尾都有零', tex: '5010 \\longrightarrow \\text{五千零十}', color: BLU, fill: '#eff6ff', note: '只讀中間的零，末尾零不讀' }
-          ], { gap: 10 });
+          const EXAMPLES = [
+            { num: '3005', reading: '三千零五',  zeros: [{ pos: 1, type: 'mid' }] },
+            { num: '3700', reading: '三千七百',  zeros: [{ pos: 2, type: 'end' }, { pos: 3, type: 'end' }] },
+            { num: '5010', reading: '五千零十',  zeros: [{ pos: 1, type: 'mid' }, { pos: 3, type: 'end' }] },
+            { num: '4020', reading: '四千零二十', zeros: [{ pos: 1, type: 'mid' }, { pos: 3, type: 'end' }] },
+          ];
+          let selected = null;
+
+          h.innerHTML = `
+            <div style="width:100%; font-family:sans-serif;">
+              <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:10px;" id="zeroCards">
+              </div>
+              <div id="zeroDetail" style="background:#f0f9ff; border:2px solid #0284c7; border-radius:12px; padding:12px; min-height:80px; display:none; text-align:center;"></div>
+            </div>
+          `;
+
+          const cardsDiv = h.querySelector('#zeroCards');
+          const detail = h.querySelector('#zeroDetail');
+
+          EXAMPLES.forEach((ex, idx) => {
+            const card = document.createElement('div');
+            card.style.cssText = 'background:#fff; border:2px solid #cbd5e1; border-radius:10px; padding:10px; text-align:center; cursor:pointer; transition:all 0.2s;';
+            card.innerHTML = `
+              <div style="font-size:24px; font-weight:900; color:#0f172a; letter-spacing:4px;" id="numDisp${idx}">${ex.num}</div>
+              <div style="font-size:12px; color:#64748b; margin-top:4px; font-weight:800;">點擊查看讀法</div>
+            `;
+            card.onclick = () => {
+              // 重置所有卡片樣式
+              cardsDiv.querySelectorAll('div[data-card]').forEach(c => {
+                c.style.borderColor = '#cbd5e1'; c.style.background = '#fff';
+              });
+              card.style.borderColor = '#0284c7';
+              card.style.background = '#eff6ff';
+              selected = idx;
+
+              // 建立高亮版數字
+              let highlighted = '';
+              const digits = ex.num.split('');
+              const zeroPositions = ex.zeros.map(z => z.pos);
+              const zeroTypes = {};
+              ex.zeros.forEach(z => { zeroTypes[z.pos] = z.type; });
+
+              digits.forEach((d, i) => {
+                if (d === '0' && zeroPositions.includes(i)) {
+                  const type = zeroTypes[i];
+                  if (type === 'mid') {
+                    // 中間零：紅色高亮（要讀）
+                    highlighted += `<span style="color:#e11d48; font-size:28px; font-weight:900; background:#fee2e2; border-radius:6px; padding:0 4px;">0</span>`;
+                  } else {
+                    // 末尾零：灰色劃線（不讀）
+                    highlighted += `<span style="color:#94a3b8; font-size:28px; font-weight:900; text-decoration:line-through; background:#f1f5f9; border-radius:6px; padding:0 4px;">0</span>`;
+                  }
+                } else {
+                  highlighted += `<span style="font-size:28px; font-weight:900; color:#0f172a;">${d}</span>`;
+                }
+              });
+
+              const midZeros = ex.zeros.filter(z => z.type === 'mid');
+              const endZeros = ex.zeros.filter(z => z.type === 'end');
+
+              let tips = '';
+              if (midZeros.length > 0) tips += `<div style="color:#e11d48; font-weight:800; font-size:13px; margin-top:4px;">🔴 紅色的 0 → 要讀「零」</div>`;
+              if (endZeros.length > 0) tips += `<div style="color:#64748b; font-weight:800; font-size:13px; margin-top:2px;">⚫ 劃線的 0 → 末尾不讀</div>`;
+
+              detail.style.display = 'block';
+              detail.innerHTML = `
+                <div style="margin-bottom:6px;">${highlighted}</div>
+                <div style="font-size:18px; font-weight:900; color:#0284c7; margin:6px 0;">讀作：${ex.reading}</div>
+                ${tips}
+              `;
+            };
+            card.setAttribute('data-card', idx);
+            cardsDiv.appendChild(card);
+          });
+
+          // 預設點選第一張
+          cardsDiv.children[0].click();
         },
         caption: '觀察不同位置的「0」，讀法大不相同！',
         example: {
           q: '請寫出「四千零二十」的阿拉伯數字與讀法。',
           steps: [
             '四千 ➔ 千位 4',
-            '零 ➔ 百位 0',
-            '二十 ➔ 十位 2、個位 0'
+            '零 ➔ 百位 0（中間零，要讀）',
+            '二十 ➔ 十位 2、個位 0（末尾零，不讀）'
           ],
           ans: '記作 4020，讀作四千零二十'
         }
       },
+
+
 
       {
         sec: '1-1',

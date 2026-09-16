@@ -76,58 +76,104 @@ window.DECK = window.DECK || [];
 
       {
         sec: '6-1', secName: '面積的直接比較與個別單位',
-        title: '【破除迷思】周長 vs 面積：周長大，面積不一定大！',
+        title: '【互動找反例】周長相同時，面積不一定相同！',
         points: [
-          '⚡ **致命迷思破解**：學生常把「周長（圍起來的長度）」與「面積（面的大小）」混為一談。',
-          '觀察下面兩個圖形：<span style="color:#e11d48">紅色外框（周長）</span> 與 <span style="color:#d97706">黃色面（面積）</span>。'
+          '⚡ **致命迷思破解**：「周長大，面積就一定大」——這是錯的！',
+          '拉動下方滑桿，固定「周長 = 24 cm」，調整長邊，觀察面積如何改變！',
+          '找出讓面積最大（或最小）的形狀，驗證<span class="k">周長相同，面積不同</span>。'
         ],
         visual: (h) => {
-          h.innerHTML = `<div style="width:100%;text-align:center;padding:4px">
-            <svg viewBox="0 0 420 185" style="max-width:100%">
-              <!-- 圖形 A -->
-              <g transform="translate(15, 10)">
-                <rect width="185" height="165" rx="12" fill="#fafafa" stroke="#cbd5e1" stroke-width="1.8"/>
-                <text x="92" y="26" text-anchor="middle" font-size="14" font-weight="900" fill="#1e293b">圖形 A (長條形)</text>
-                
-                <!-- 5x1 網格 (格長 26) -->
-                <g transform="translate(27, 45)">
-                  <!-- 面黃色 -->
-                  <rect x="0" y="0" width="130" height="26" fill="#fef08a" stroke="#eab308" stroke-width="1"/>
-                  <line x1="26" y1="0" x2="26" y2="26" stroke="#ca8a04" stroke-dasharray="2,2"/>
-                  <line x1="52" y1="0" x2="52" y2="26" stroke="#ca8a04" stroke-dasharray="2,2"/>
-                  <line x1="78" y1="0" x2="78" y2="26" stroke="#ca8a04" stroke-dasharray="2,2"/>
-                  <line x1="104" y1="0" x2="104" y2="26" stroke="#ca8a04" stroke-dasharray="2,2"/>
-                  <!-- 紅框周長 -->
-                  <rect x="0" y="0" width="130" height="26" fill="none" stroke="#e11d48" stroke-width="3.5"/>
-                </g>
+          h.innerHTML = `
+            <div style="width:100%; font-family:sans-serif;">
+              <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:8px; text-align:center;">
+                <div style="background:#fff1f2; border:2px solid #e11d48; border-radius:10px; padding:8px;">
+                  <div style="font-size:11px; font-weight:800; color:#9f1239;">周長 (固定)</div>
+                  <div style="font-size:22px; font-weight:900; color:#e11d48;">24 cm</div>
+                </div>
+                <div id="areaDisplay" style="background:#f0fdf4; border:2px solid #059669; border-radius:10px; padding:8px;">
+                  <div style="font-size:11px; font-weight:800; color:#065f46;">面積 (變化中!)</div>
+                  <div id="areaNum" style="font-size:22px; font-weight:900; color:#059669;">— cm²</div>
+                </div>
+              </div>
+              <div id="perimStage" style="background:#f8fafc; border:1px solid #cbd5e1; border-radius:10px; padding:10px; height:160px;"></div>
+              <div class="ictrl" style="margin-top:10px;">
+                <label style="font-weight:800;">長邊：<span id="lenVal" style="color:#2563eb; font-weight:900;">10</span> cm（短邊自動 = <span id="shortVal">2</span> cm）</label>
+                <input type="range" id="lenSlider" min="2" max="11" step="1" value="10" style="width:100%; accent-color:#2563eb;">
+              </div>
+              <div id="perimTip" style="margin-top:6px; background:#fef3c7; border:1.5px solid #d97706; border-radius:8px; padding:6px 10px; font-size:12.5px; font-weight:800; color:#92400e; display:none;"></div>
+            </div>
+          `;
 
-                <rect x="20" y="90" width="145" height="60" rx="8" fill="#fff1f2" stroke="#fda4af" stroke-width="1.5"/>
-                <text x="92" y="112" text-anchor="middle" font-size="12.5" font-weight="900" fill="#e11d48">周長：(5＋1)×2 ＝ 12 cm</text>
-                <text x="92" y="138" text-anchor="middle" font-size="12.5" font-weight="900" fill="#d97706">面積：5 × 1 ＝ 5 cm²</text>
-              </g>
+          const lenSlider = h.querySelector('#lenSlider');
+          const lenVal = h.querySelector('#lenVal');
+          const shortVal = h.querySelector('#shortVal');
+          const areaNum = h.querySelector('#areaNum');
+          const stage = h.querySelector('#perimStage');
+          const tip = h.querySelector('#perimTip');
 
-              <!-- 圖形 B -->
-              <g transform="translate(220, 10)">
-                <rect width="185" height="165" rx="12" fill="#fafafa" stroke="#cbd5e1" stroke-width="1.8"/>
-                <text x="92" y="26" text-anchor="middle" font-size="14" font-weight="900" fill="#1e293b">圖形 B (方塊形)</text>
-                
-                <!-- 3x2 網格 (格長 26) -->
-                <g transform="translate(53, 40)">
-                  <rect x="0" y="0" width="78" height="52" fill="#fef08a" stroke="#eab308" stroke-width="1"/>
-                  <line x1="26" y1="0" x2="26" y2="52" stroke="#ca8a04" stroke-dasharray="2,2"/>
-                  <line x1="52" y1="0" x2="52" y2="52" stroke="#ca8a04" stroke-dasharray="2,2"/>
-                  <line x1="0" y1="26" x2="78" y2="26" stroke="#ca8a04" stroke-dasharray="2,2"/>
-                  <rect x="0" y="0" width="78" height="52" fill="none" stroke="#e11d48" stroke-width="3.5"/>
-                </g>
+          // 記錄最小最大面積用於比較
+          let maxArea = 0, minArea = 99999;
 
-                <rect x="20" y="102" width="145" height="52" rx="8" fill="#f0fdf4" stroke="#86efac" stroke-width="1.5"/>
-                <text x="92" y="122" text-anchor="middle" font-size="12.5" font-weight="900" fill="#e11d48">周長：(3＋2)×2 ＝ 10 cm</text>
-                <text x="92" y="144" text-anchor="middle" font-size="12.5" font-weight="900" fill="#059669">面積：3 × 2 ＝ 6 cm²</text>
-              </g>
-            </svg>
-          </div>`;
+          function renderPerim() {
+            const L = parseInt(lenSlider.value, 10);
+            const W = 12 - L; // 周長 24 = 2*(L+W)，故 L+W=12
+            const area = L * W;
+            lenVal.textContent = L;
+            shortVal.textContent = W;
+            areaNum.textContent = `${area} cm²`;
+
+            if (area > maxArea) maxArea = area;
+            if (area < minArea) minArea = area;
+
+            // 繪製矩形
+            const maxW = 280, maxH = 130;
+            const scale = Math.min(maxW / (L * 12), maxH / (W * 12), 8);
+            const rW = Math.round(L * scale * 10);
+            const rH = Math.round(W * scale * 10);
+            const rx = (350 - rW) / 2;
+            const ry = (145 - rH) / 2;
+
+            // 格線（單位格）
+            let gridLines = '';
+            for (let gi = 1; gi < L; gi++) {
+              gridLines += `<line x1="${rx + gi * rW / L}" y1="${ry}" x2="${rx + gi * rW / L}" y2="${ry + rH}" stroke="#fde68a" stroke-width="0.8"/>`;
+            }
+            for (let gi = 1; gi < W; gi++) {
+              gridLines += `<line x1="${rx}" y1="${ry + gi * rH / W}" x2="${rx + rW}" y2="${ry + gi * rH / W}" stroke="#fde68a" stroke-width="0.8"/>`;
+            }
+
+            let out = '';
+            // 面積填充
+            out += `<rect x="${rx}" y="${ry}" width="${rW}" height="${rH}" fill="#fef08a" stroke="#eab308" stroke-width="1"/>`;
+            out += gridLines;
+            // 周長邊框
+            out += `<rect x="${rx}" y="${ry}" width="${rW}" height="${rH}" fill="none" stroke="#e11d48" stroke-width="3"/>`;
+
+            // 尺寸標註
+            out += `<text x="${rx + rW/2}" y="${ry - 6}" text-anchor="middle" font-size="13" font-weight="900" fill="#1d4ed8">${L} cm</text>`;
+            out += `<text x="${rx - 6}" y="${ry + rH/2 + 4}" text-anchor="end" font-size="13" font-weight="900" fill="#1d4ed8">${W} cm</text>`;
+
+            // 公式
+            out += `<text x="175" y="140" text-anchor="middle" font-size="12.5" font-weight="900" fill="#0f172a">${L} × ${W} = ${area} cm²（面積）</text>`;
+
+            stage.innerHTML = `<svg viewBox="0 0 350 150" style="width:100%; height:100%;">${out}</svg>`;
+
+            // 提示語
+            if (W <= 1) {
+              tip.style.display = 'block';
+              tip.innerHTML = `⚠️ 長邊 ${L} cm × 短邊 ${W} cm → 面積 ${area} cm²，超細長的形狀面積最小！`;
+            } else if (L === 6) {
+              tip.style.display = 'block';
+              tip.innerHTML = `✨ 正方形！6 × 6 = 36 cm² → 同周長下，正方形的面積最大！`;
+            } else {
+              tip.style.display = 'none';
+            }
+          }
+
+          lenSlider.oninput = renderPerim;
+          renderPerim();
         },
-        caption: '重大結論：圖形 A 周長 (12cm) 比 圖形 B (10cm) 長，但面積 (5cm²) 反而比 B (6cm²) 小！周長與面積完全不同！',
+        caption: '重大結論：周長相同（都是24cm），長寬不同時面積也不同！最大面積是正方形（6×6=36cm²），最小是最細長的形狀。',
         example: {
           q: '阿亮用 12 公分的鐵絲圍成不同的形狀，圍出來的圖形面積一定都一樣大嗎？',
           steps: [
@@ -139,6 +185,8 @@ window.DECK = window.DECK || [];
           ans: '不一定一樣大！周長相同時，圍成的形狀不同，面積也會隨之改變。'
         }
       },
+
+
 
       /* ==================== 6-2 1平方公分與網格測量 ==================== */
       {
@@ -153,9 +201,9 @@ window.DECK = window.DECK || [];
         visual: (h) => {
           h.innerHTML = `
             <div style="width:100%; font-family:sans-serif;">
-              <div style="display:flex; justify-content:space-between; align-items:center; background:#ecfdf5; border:1.5px solid #059669; border-radius:10px; padding:10px 14px; margin-bottom:10px;">
-                <div style="font-size:14px; font-weight:900; color:#047857;">
-                  目前圖形面積：<span id="areaResult" style="color:#e11d48; font-size:18px;">12</span> 平方公分 (cm²)
+              <div style="display:flex; justify-content:space-between; align-items:center; background:#ecfdf5; border:1.5px solid #059669; border-radius:10px; padding:8px 12px; margin-bottom:8px;">
+                <div style="font-size:13.5px; font-weight:900; color:#047857;">
+                  已鋪滿：<span id="filledCount" style="color:#e11d48; font-size:18px;">0</span> / <span id="totalCells">12</span> cm²
                 </div>
                 <div style="display:flex; gap:6px;">
                   <button class="ashape-btn active" data-type="rect" style="padding:4px 8px; border-radius:6px; border:1px solid #059669; background:#059669; color:#fff; font-weight:800; font-size:12px; cursor:pointer;">長方形 (4x3)</button>
@@ -164,22 +212,30 @@ window.DECK = window.DECK || [];
                 </div>
               </div>
 
-              <div id="gridAreaStage" style="position:relative; background:#fff; border:1px solid #cbd5e1; border-radius:10px; padding:10px; height:180px; overflow:hidden;">
+              <div id="gridAreaStage" style="position:relative; background:#fff; border:1px solid #cbd5e1; border-radius:10px; padding:8px; height:175px; overflow:hidden;">
                 <!-- 網格與圖形渲染區 -->
+              </div>
+
+              <div class="ictrl" style="margin-top:6px; display:flex; justify-content:center; gap:8px;">
+                <button id="addTileBtn" style="padding:5px 14px; border-radius:8px; border:1.5px solid #059669; background:#ecfdf5; color:#059669; font-weight:900; font-size:13px; cursor:pointer;">🧩 點擊鋪滿 1 格 (1 cm²)</button>
+                <button id="fillAllBtn" style="padding:5px 14px; border-radius:8px; border:1.5px solid #2563eb; background:#eff6ff; color:#2563eb; font-weight:900; font-size:13px; cursor:pointer;">✨ 全部自動鋪滿</button>
+                <button id="resetTileBtn" style="padding:5px 14px; border-radius:8px; border:1.5px solid #cbd5e1; background:#fff; color:#64748b; font-weight:800; font-size:13px; cursor:pointer;">🔄 重置清除</button>
               </div>
             </div>
           `;
 
           let shapeType = 'rect';
+          let filledCount = 0;
           const stage = h.querySelector('#gridAreaStage');
-          const resLabel = h.querySelector('#areaResult');
+          const filledLabel = h.querySelector('#filledCount');
+          const totalLabel = h.querySelector('#totalCells');
           const btns = h.querySelectorAll('.ashape-btn');
+          const addBtn = h.querySelector('#addTileBtn');
+          const fillBtn = h.querySelector('#fillAllBtn');
+          const resetBtn = h.querySelector('#resetTileBtn');
 
-          function renderGrid() {
-            const gridUnit = 28;
-            const startX = 30, startY = 15;
+          function getShapeCells() {
             let cells = [];
-
             if (shapeType === 'rect') {
               for (let r = 0; r < 3; r++) { for (let c = 0; c < 4; c++) cells.push({ r, c }); }
             } else if (shapeType === 'square') {
@@ -190,28 +246,68 @@ window.DECK = window.DECK || [];
               cells.push({ r: 3, c: 2 });
               cells.push({ r: 3, c: 3 });
             }
+            return cells;
+          }
 
-            resLabel.textContent = cells.length;
+          function renderGrid() {
+            const cells = getShapeCells();
+            totalLabel.textContent = cells.length;
+            filledLabel.textContent = filledCount;
+
+            const gridUnit = 28;
+            const startX = 30, startY = 15;
             let s = '';
 
+            // 背景 1cm² 網格
             for (let r = 0; r < 5; r++) {
               for (let c = 0; c < 10; c++) {
                 s += `<rect x="${startX + c * gridUnit}" y="${startY + r * gridUnit}" width="${gridUnit}" height="${gridUnit}" fill="none" stroke="#e2e8f0" stroke-width="1"/>`;
               }
             }
 
+            // 圖形輪廓與鋪滿格
             cells.forEach((cell, idx) => {
               const cx = startX + cell.c * gridUnit;
               const cy = startY + cell.r * gridUnit;
-              s += `<rect x="${cx}" y="${cy}" width="${gridUnit}" height="${gridUnit}" fill="rgba(5, 150, 105, 0.25)" stroke="#059669" stroke-width="1.8"/>`;
-              s += `<text x="${cx + gridUnit / 2}" y="${cy + gridUnit / 2 + 4}" text-anchor="middle" font-size="11" font-weight="900" fill="#047857">${idx + 1}</text>`;
+              const isFilled = idx < filledCount;
+
+              s += `<g cursor="pointer" class="cell-g" data-idx="${idx}">`;
+              s += `<rect x="${cx}" y="${cy}" width="${gridUnit}" height="${gridUnit}" fill="${isFilled ? 'rgba(5, 150, 105, 0.4)' : '#f8fafc'}" stroke="${isFilled ? '#059669' : '#94a3b8'}" stroke-width="${isFilled ? '2' : '1.2'}"/>`;
+              if (isFilled) {
+                s += `<text x="${cx + gridUnit / 2}" y="${cy + gridUnit / 2 + 4}" text-anchor="middle" font-size="11" font-weight="900" fill="#047857">${idx + 1}</text>`;
+              } else {
+                s += `<text x="${cx + gridUnit / 2}" y="${cy + gridUnit / 2 + 4}" text-anchor="middle" font-size="9" font-weight="700" fill="#94a3b8">+1</text>`;
+              }
+              s += `</g>`;
             });
 
-            s += `<rect x="310" y="15" width="28" height="28" fill="rgba(225,29,72,0.2)" stroke="#e11d48" stroke-width="1.8"/>`;
-            s += `<text x="324" y="32" text-anchor="middle" font-size="9" font-weight="900" fill="#e11d48">1cm²</text>`;
-            s += `<text x="324" y="58" text-anchor="middle" font-size="11" font-weight="800" fill="#334155">1平方公分</text>`;
+            // 右側 1cm² 說明與成就卡
+            s += `<g transform="translate(305, 15)">`;
+            s += `<rect x="0" y="0" width="35" height="35" fill="rgba(225,29,72,0.15)" stroke="#e11d48" stroke-width="2" rx="4"/>`;
+            s += `<text x="17.5" y="22" text-anchor="middle" font-size="11" font-weight="900" fill="#e11d48">1cm²</text>`;
+            s += `<text x="17.5" y="50" text-anchor="middle" font-size="11" font-weight="800" fill="#334155">1平方公分</text>`;
 
-            stage.innerHTML = `<svg viewBox="0 0 370 160" style="width:100%; height:100%;">${s}</svg>`;
+            if (filledCount === cells.length) {
+              s += `<rect x="-10" y="70" width="70" height="42" fill="#ecfdf5" stroke="#059669" stroke-width="2" rx="8"/>`;
+              s += `<text x="25" y="88" text-anchor="middle" font-size="11" font-weight="900" fill="#059669">🎉 成功鋪滿</text>`;
+              s += `<text x="25" y="104" text-anchor="middle" font-size="12" font-weight="900" fill="#e11d48">${cells.length} cm²！</text>`;
+            }
+            s += `</g>`;
+
+            stage.innerHTML = `<svg viewBox="0 0 380 160" style="width:100%; height:100%;">${s}</svg>`;
+
+            // 幫圖形上的每格綁定點擊鋪滿
+            stage.querySelectorAll('.cell-g').forEach(g => {
+              g.onclick = () => {
+                const targetIdx = parseInt(g.dataset.idx, 10);
+                if (targetIdx >= filledCount) {
+                  filledCount = targetIdx + 1;
+                } else {
+                  filledCount = targetIdx;
+                }
+                renderGrid();
+              };
+            });
           }
 
           btns.forEach(btn => {
@@ -219,9 +315,25 @@ window.DECK = window.DECK || [];
               btns.forEach(b => { b.style.background = '#fff'; b.style.color = '#334155'; b.style.borderColor = '#cbd5e1'; });
               btn.style.background = '#059669'; btn.style.color = '#fff'; btn.style.borderColor = '#059669';
               shapeType = btn.dataset.type;
+              filledCount = 0;
               renderGrid();
             };
           });
+
+          addBtn.onclick = () => {
+            const total = getShapeCells().length;
+            if (filledCount < total) { filledCount++; renderGrid(); }
+          };
+
+          fillBtn.onclick = () => {
+            filledCount = getShapeCells().length;
+            renderGrid();
+          };
+
+          resetBtn.onclick = () => {
+            filledCount = 0;
+            renderGrid();
+          };
 
           renderGrid();
         },
