@@ -118,94 +118,144 @@ window.DECK = window.DECK || [];
         }
       },
 
-      /* ==================== 8-2 容量的實測與換算 (升級版：量杯水面加繪 👁️ 視線平視凹面指示) ==================== */
+      /* ==================== 8-2 容量的實測與換算 (升級版：注水按鈕 + 倒水轉化動畫) ==================== */
       {
         sec: '8-2', secName: '容量的實測與換算',
-        title: '【動態量杯】刻度量杯與視線平視/凹面指示模擬器',
+        title: '【動態量杯】刻度量杯與視線平視/凹面指示模擬器＋注水累積体驗',
         points: [
-          '拉動「液體毫升數 (0 ~ 2800 mL)」。',
+          '點擊 `[💧 注入 250 mL]` 逐次累積到 1000 mL，或拉動滑桿任意調整。',
           '👁️ **讀數規範**：<span class="k">視線必須與水面中央最低處 (凹面) 平視</span>。',
-          '滿 1000 mL 自動累積為 1 公升！'
+          '水量累積到 1000 mL 後，點擊 `[🪴 倒入 1L 鮮奶壺]` 解鎖轉化動畫！'
         ],
-        formula: { label: '雙向容量換算', tex: 'X\\text{ L } Y\\text{ mL} \\iff (X \\times 1000 + Y)\\text{ mL}' },
+        formula: { label: '雙向容量換算', tex: 'A\\text{ L } B\\text{ mL} \\iff (1000 \\times A + B)\\text{ mL}' },
         visual: (h) => {
           h.innerHTML = `
             <div style="width:100%; font-family:sans-serif;">
               <div style="background:#faf5ff; border:1.5px solid #7c3aed; border-radius:12px; padding:10px; text-align:center; margin-bottom:8px;">
                 <div style="font-size:13px; font-weight:800; color:#6b21a8;">當前量杯水量：</div>
                 <div style="font-size:22px; font-weight:900; color:#0f172a; margin:4px 0;">
-                  <span id="cupL" style="color:#7c3aed;">1</span> 公升 
-                  <span id="cupML" style="color:#e11d48;">450</span> 毫升
-                  ＝ <span id="cupTotal" style="color:#2563eb;">1450</span> mL
+                  <span id="cupL" style="color:#7c3aed;">0</span> 公升 
+                  <span id="cupML" style="color:#e11d48;">0</span> 毫升
+                  ＝ <span id="cupTotal" style="color:#2563eb;">0</span> mL
                 </div>
               </div>
 
-              <div id="cupSimStage" style="position:relative; background:#fff; border:1px solid #cbd5e1; border-radius:10px; padding:10px; height:180px; overflow:hidden;">
+              <div id="cupSimStage" style="position:relative; background:#fff; border:1px solid #cbd5e1; border-radius:10px; padding:10px; height:160px; overflow:hidden;">
                 <!-- 量杯水面 SVG 由 JS 渲染 -->
               </div>
 
+              <div style="display:flex; gap:8px; margin-top:8px; flex-wrap:wrap;">
+                <button id="pourBtn" style="flex:1; padding:6px; border-radius:8px; border:1.5px solid #7c3aed; background:#eff6ff; color:#7c3aed; font-weight:900; font-size:13px; cursor:pointer;">💧 注入 250 mL</button>
+                <button id="pourAllBtn" style="padding:6px 10px; border-radius:8px; border:1.5px solid #7c3aed; background:#fff; color:#7c3aed; font-weight:800; font-size:12px; cursor:pointer;">渴满 (1000mL)</button>
+                <button id="pourResetBtn" style="padding:6px 10px; border-radius:8px; border:1.5px solid #cbd5e1; background:#fff; color:#64748b; font-weight:800; font-size:12px; cursor:pointer;">↺ 清空</button>
+                <button id="milkBtn" style="padding:6px 12px; border-radius:8px; border:2px solid #e11d48; background:#fff1f2; color:#e11d48; font-weight:900; font-size:13px; cursor:pointer; display:none;">🪴 倒入 1L 鮮奶壺！</button>
+              </div>
               <div class="ictrl" style="margin-top:8px;">
-                <label>倒入水量 (mL)：<span class="ival" id="mlSliderVal">1450</span> mL</label>
-                <input type="range" id="mlSlider" min="100" max="2800" value="1450" step="50" style="width:100%;">
+                <label>或拉動滑桿：<span class="ival" id="mlSliderVal">0</span> mL</label>
+                <input type="range" id="mlSlider" min="0" max="2800" value="0" step="50" style="width:100%;">
+              </div>
+              <div id="milkConvertCard" style="display:none; margin-top:6px; background:#fef3c7; border:2px solid #d97706; border-radius:10px; padding:8px 12px; text-align:center;">
+                <div style="font-size:15px; font-weight:900; color:#d97706;">🎉 1000 mL ⇒ 1 L ！全部倒入鮮奶壺！</div>
+                <div id="milkBottleCount" style="font-size:13px; color:#92400e; font-weight:800;"></div>
               </div>
             </div>
           `;
 
+          let currentML = 0;
+          let milkBottles = 0;
           const slider = h.querySelector('#mlSlider');
           const sliderVal = h.querySelector('#mlSliderVal');
           const cupL = h.querySelector('#cupL');
           const cupML = h.querySelector('#cupML');
           const cupTotal = h.querySelector('#cupTotal');
           const stage = h.querySelector('#cupSimStage');
+          const pourBtn = h.querySelector('#pourBtn');
+          const pourAllBtn = h.querySelector('#pourAllBtn');
+          const pourResetBtn = h.querySelector('#pourResetBtn');
+          const milkBtn = h.querySelector('#milkBtn');
+          const milkConvertCard = h.querySelector('#milkConvertCard');
+          const milkBottleCount = h.querySelector('#milkBottleCount');
 
           function renderCup() {
-            const total = parseInt(slider.value, 10);
+            const total = currentML;
             const L = Math.floor(total / 1000);
             const mL = total % 1000;
 
             sliderVal.textContent = total;
+            slider.value = total;
             cupL.textContent = L;
             cupML.textContent = mL;
             cupTotal.textContent = total;
 
+            // 顯示倒入鮮奶壺按鈕
+            milkBtn.style.display = (total >= 1000 && total % 1000 === 0 && total > 0) ? 'inline-block' : 'none';
+
             let s = '';
-            const cy1 = 20, cw = 85, ch = 130;
+            const cy1 = 15, cw = 85, ch = 120;
 
             // 第 1 量杯
             s += `<rect x="40" y="${cy1}" width="${cw}" height="${ch}" fill="#f8fafc" stroke="#7c3aed" stroke-width="2" rx="4"/>`;
             const fillH1 = Math.min(ch, (Math.min(total, 1000) / 1000) * ch);
             if (fillH1 > 0) {
-              s += `<rect x="42" y="${cy1 + ch - fillH1}" width="${cw - 4}" height="${fillH1}" fill="rgba(124, 58, 237, 0.4)" rx="2"/>`;
+              s += `<rect x="42" y="${cy1 + ch - fillH1}" width="${cw - 4}" height="${fillH1}" fill="rgba(124, 58, 237, 0.45)" rx="2"/>`;
             }
-            s += TX(82, cy1 + ch + 16, '第 1 量杯 (1000mL)', { fs: 10.5, c: VIO, anchor: 'middle', fw: '900' });
+            // 刷度線 250/500/750
+            [250, 500, 750].forEach(mark => {
+              const my = cy1 + ch - (mark / 1000) * ch;
+              s += `<line x1="40" y1="${my}" x2="60" y2="${my}" stroke="#a78bfa" stroke-width="1.2"/>`;
+              s += `<text x="35" y="${my + 4}" text-anchor="end" font-size="9" fill="#7c3aed" font-weight="800">${mark}</text>`;
+            });
+            s += TX(82, cy1 + ch + 15, `第 1 量杯 (1000mL)`, { fs: 10, c: VIO, anchor: 'middle', fw: '900' });
 
             // 第 2 量杯
-            s += `<rect x="160" y="${cy1}" width="${cw}" height="${ch}" fill="#f8fafc" stroke="#7c3aed" stroke-width="2" rx="4"/>`;
+            s += `<rect x="155" y="${cy1}" width="${cw}" height="${ch}" fill="#f8fafc" stroke="#7c3aed" stroke-width="2" rx="4"/>`;
             const remML = Math.max(0, total - 1000);
             const fillH2 = Math.min(ch, (Math.min(remML, 1000) / 1000) * ch);
             if (fillH2 > 0) {
               const waterY = cy1 + ch - fillH2;
-              s += `<rect x="162" y="${waterY}" width="${cw - 4}" height="${fillH2}" fill="rgba(124, 58, 237, 0.4)" rx="2"/>`;
-
-              // 👁️ 視線平視指示線
-              s += `<line x1="160" y1="${waterY}" x2="265" y2="${waterY}" stroke="${RED}" stroke-width="1.8" stroke-dasharray="3 3"/>`;
-              s += TX(275, waterY + 4, '👁️ 平視凹面', { fs: 10, c: RED, fw: '900' });
+              s += `<rect x="157" y="${waterY}" width="${cw - 4}" height="${fillH2}" fill="rgba(124, 58, 237, 0.45)" rx="2"/>`;
+              s += `<line x1="155" y1="${waterY}" x2="260" y2="${waterY}" stroke="#e11d48" stroke-width="1.8" stroke-dasharray="3 3"/>`;
+              s += TX(268, waterY + 4, '👁️ 平視凹面', { fs: 9.5, c: RED, fw: '900' });
             }
-            s += TX(202, cy1 + ch + 16, '第 2 量杯', { fs: 10.5, c: VIO, anchor: 'middle', fw: '900' });
+            s += TX(197, cy1 + ch + 15, `第 2 量杯`, { fs: 10, c: VIO, anchor: 'middle', fw: '900' });
 
-            // 右側計算說明卡
+            // 鮮奶壺圖示
             s += `<g transform="translate(280, 20)">`;
-            s += BOX(0, 0, 80, 120, { fill: '#faf5ff', stroke: '#c084fc', r: 6 });
-            s += TX(40, 22, '換算拆解', { fs: 11, c: VIO, anchor: 'middle', fw: '900' });
-            s += TX(40, 48, `${L} L`, { fs: 15, c: VIO, anchor: 'middle', fw: '900' });
-            s += TX(40, 68, `＝${L * 1000}mL`, { fs: 10, c: '#64748b', anchor: 'middle' });
-            s += TX(40, 90, `＋${mL}mL`, { fs: 12, c: RED, anchor: 'middle', fw: '900' });
+            s += BOX(0, 0, 75, 105, { fill: '#faf5ff', stroke: '#c084fc', r: 6 });
+            s += TX(37, 20, '換算拆解', { fs: 10.5, c: VIO, anchor: 'middle', fw: '900' });
+            const dispL = Math.floor(total / 1000);
+            const dispML = total % 1000;
+            s += TX(37, 45, `${dispL} L`, { fs: 14, c: VIO, anchor: 'middle', fw: '900' });
+            s += TX(37, 63, `＝${dispL * 1000}mL`, { fs: 9.5, c: '#64748b', anchor: 'middle' });
+            s += TX(37, 82, `＋${dispML}mL`, { fs: 11.5, c: RED, anchor: 'middle', fw: '900' });
             s += `</g>`;
 
-            stage.innerHTML = `<svg viewBox="0 0 370 175" style="width:100%; height:100%;">${s}</svg>`;
+            stage.innerHTML = `<svg viewBox="0 0 370 155" style="width:100%; height:100%;">${s}</svg>`;
           }
 
-          slider.oninput = renderCup;
+          pourBtn.onclick = () => {
+            if (currentML < 1000) {
+              currentML = Math.min(1000, currentML + 250);
+              renderCup();
+            }
+          };
+          pourAllBtn.onclick = () => { currentML = 1000; renderCup(); };
+          pourResetBtn.onclick = () => {
+            currentML = 0; milkBottles = 0;
+            milkConvertCard.style.display = 'none';
+            milkBottleCount.textContent = '';
+            renderCup();
+          };
+          milkBtn.onclick = () => {
+            milkBottles++;
+            currentML = Math.max(0, currentML - 1000);
+            milkConvertCard.style.display = 'block';
+            milkBottleCount.textContent = `目前已倒入 ${milkBottles} 瓶 (${milkBottles} L)！`;
+            milkBtn.style.display = 'none';
+            renderCup();
+          };
+
+          slider.oninput = () => { currentML = parseInt(slider.value, 10); renderCup(); };
           renderCup();
         },
         caption: '1 公升 ＝ 1000 毫升。讀取刻度時視線必須平視水面最低處 (凹面)。',
@@ -220,41 +270,17 @@ window.DECK = window.DECK || [];
         }
       },
 
-      /* ==================== 8-3 容量的加減計算 ==================== */
+      /* ==================== 8-3 容量的加減計算（升級：步驟推演器） ==================== */
       {
         sec: '8-3', secName: '容量的加減計算',
-        title: '公升對公升、毫升對毫升，滿1000毫升要進1公升',
+        title: '公升對公升、毫升對毫升，滿1000毫升要進1公升、不足減要借位（分步推演器）',
         points: [
           '**同單位對齊**：直式計算分成「公升 (L)」與「毫升 (mL)」兩欄。',
-          '**加法進位**：毫升欄相加滿 1000 mL，向公升欄<span class="k">進 1 L</span>。',
-          '**減法借位**：毫升欄不夠減時，向公分欄<span class="k">借 1 L (換成 1000 mL)</span> 再減。'
+          '點擊 `[Step 1 ~ Step 3]` 按鈕，分步觀察加法進位與減法借位的直式步驟。',
+          '切換「加法」與「減法」兩種範例，比較進/借位處理方式的差異。'
         ],
         formula: { label: '進借位規則', tex: '1000\\text{ mL} \\rightleftarrows 1\\text{ L}' },
         visual: (h) => {
-          let out = '';
-          out += BOX(15, 15, 188, 225, { fill: '#faf5ff', stroke: VIO, r: 12 });
-          out += TX(109, 38, '【加法進位】範例', { fs: 14, c: VIO, anchor: 'middle', fw: '900' });
-          out += TX(109, 58, '2 L 750 mL ＋ 1 L 600 mL', { fs: 11.5, c: '#6b21a8', anchor: 'middle' });
-
-          out += TX(65, 90, 'L', { fs: 13, c: '#64748b', anchor: 'middle', fw: '900' });
-          out += TX(135, 90, 'mL', { fs: 13, c: '#64748b', anchor: 'middle', fw: '900' });
-
-          out += TX(65, 118, '2', { fs: 16, c: '#0f172a', anchor: 'middle', fw: '900' });
-          out += TX(135, 118, '750', { fs: 15, c: '#0f172a', anchor: 'middle', fw: '900' });
-          out += TX(35, 142, '＋', { fs: 16, c: '#0f172a', anchor: 'middle', fw: '900' });
-          out += TX(65, 142, '1', { fs: 16, c: '#0f172a', anchor: 'middle', fw: '900' });
-          out += TX(135, 142, '600', { fs: 15, c: '#0f172a', anchor: 'middle', fw: '900' });
-
-          out += `<line x1="30" y1="152" x2="165" y2="152" stroke="#0f172a" stroke-width="2"/>`;
-
-          out += TX(65, 76, '①', { fs: 13, c: RED, anchor: 'middle', fw: '900' });
-          out += TX(65, 178, '4', { fs: 17, c: RED, anchor: 'middle', fw: '900' });
-          out += TX(135, 178, '350', { fs: 16, c: RED, anchor: 'middle', fw: '900' });
-
-          out += TX(109, 215, '750+600=1350 ➔ 寫350進1L', { fs: 10.5, c: RED, anchor: 'middle', fw: '900' });
-
-          out += BOX(217, 15, 188, 225, { fill: '#fff1f2', stroke: RED, r: 12 });
-          out += TX(311, 38, '【減法借位】範例', { fs: 14, c: RED, anchor: 'middle', fw: '900' });
           out += TX(311, 58, '4 L 200 mL － 1 L 450 mL', { fs: 11.5, c: '#9f1239', anchor: 'middle' });
 
           out += TX(267, 90, 'L', { fs: 13, c: '#64748b', anchor: 'middle', fw: '900' });

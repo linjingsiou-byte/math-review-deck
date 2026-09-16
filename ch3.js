@@ -105,7 +105,8 @@ window.DECK = window.DECK || [];
                 </div>
                 <div style="display:flex; gap:6px;">
                   <button id="alignZeroBtn" style="padding:3px 8px; border-radius:6px; border:1px solid #059669; background:#059669; color:#fff; font-weight:800; font-size:12px; cursor:pointer;">【對齊 0 刻度】</button>
-                  <button id="shiftZeroBtn" style="padding:3px 8px; border-radius:6px; border:1px solid #cbd5e1; background:#fff; color:#334155; font-weight:800; font-size:12px; cursor:pointer;">⚡【移開 0 刻度】</button>
+                  <button id="shiftZeroBtn" style="padding:3px 8px; border-radius:6px; border:1px solid #cbd5e1; background:#fff; color:#334155; font-weight:800; font-size:12px; cursor:pointer;">⚡【移開 20mm】</button>
+                  <button id="shift35Btn" style="padding:3px 8px; border-radius:6px; border:1px solid #cbd5e1; background:#fff; color:#334155; font-weight:800; font-size:12px; cursor:pointer;">⚡【移開 35mm】</button>
                 </div>
               </div>
 
@@ -239,9 +240,22 @@ window.DECK = window.DECK || [];
             renderRuler();
           };
 
+          const shift35Btn = h.querySelector('#shift35Btn');
+
           shiftBtn.onclick = () => {
             offsetMm = 20; // 移至 20 mm (2 cm) 處
             shiftBtn.style.background = '#e11d48'; shiftBtn.style.color = '#fff'; shiftBtn.style.borderColor = '#e11d48';
+            shift35Btn.style.background = '#fff'; shift35Btn.style.color = '#334155'; shift35Btn.style.borderColor = '#cbd5e1';
+            alignBtn.style.background = '#fff'; alignBtn.style.color = '#334155'; alignBtn.style.borderColor = '#cbd5e1';
+            probeMm = offsetMm + currentLen;
+            range.value = probeMm;
+            renderRuler();
+          };
+
+          shift35Btn.onclick = () => {
+            offsetMm = 35; // 移至 35 mm (3.5 cm) 處
+            shift35Btn.style.background = '#d97706'; shift35Btn.style.color = '#fff'; shift35Btn.style.borderColor = '#d97706';
+            shiftBtn.style.background = '#fff'; shiftBtn.style.color = '#334155'; shiftBtn.style.borderColor = '#cbd5e1';
             alignBtn.style.background = '#fff'; alignBtn.style.color = '#334155'; alignBtn.style.borderColor = '#cbd5e1';
             probeMm = offsetMm + currentLen;
             range.value = probeMm;
@@ -278,7 +292,7 @@ window.DECK = window.DECK || [];
           '例如：\\(58\\text{ mm} = 50\\text{ mm} + 8\\text{ mm} = 5\\text{ cm } 8\\text{ mm}\\)。',
           '**長度比較**：先將單位統一化為「毫米」，比較數字大小即可。'
         ],
-        formula: { label: '單位換算法則', tex: 'A\\text{ cm } B\\text{ mm} = (A \\times 10 + B)\\text{ mm}' },
+        formula: { label: '單位換算法則', tex: 'A\\text{ cm } B\\text{ mm} = (10 \\times A + B)\\text{ mm}' },
         visual: (h) => {
           let out = '';
           out += BOX(15, 15, 390, 110, { fill: '#f0fdf4', stroke: GRN, r: 12 });
@@ -286,7 +300,7 @@ window.DECK = window.DECK || [];
 
           out += BOX(30, 55, 170, 55, { fill: '#fff', stroke: '#a7f3d0', r: 8 });
           out += TX(115, 75, '4 cm 2 mm', { fs: 14, c: '#065f46', anchor: 'middle', fw: '900' });
-          out += TX(115, 96, '↓ 40 mm + 2 mm = 42 mm', { fs: 12, c: GRN, anchor: 'middle' });
+          out += TX(115, 96, '↓ 10 × 4 + 2 = 42 mm', { fs: 12, c: GRN, anchor: 'middle' });
 
           out += BOX(215, 55, 170, 55, { fill: '#fff', stroke: '#a7f3d0', r: 8 });
           out += TX(300, 75, '69 mm', { fs: 14, c: '#065f46', anchor: 'middle', fw: '900' });
@@ -300,11 +314,11 @@ window.DECK = window.DECK || [];
 
           h.innerHTML = svg('0 0 420 260', out);
         },
-        caption: '換算時只要記住「1 公分 ＝ 10 毫米」，公分數直接乘以 10 即可換成毫米。',
+        caption: '換算時只要記住「1 公分 ＝ 10 毫米」，用 10 乘以公分數（10 × 公分數）即可換成毫米。',
         example: {
           q: '小明的鉛筆長 8 公分 4 毫米，小華的鉛筆長 79 毫米，誰的鉛筆比較長？長多少毫米？',
           steps: [
-            '1. 小明的鉛筆：8 cm 4 mm ＝ 80 mm ＋ 4 mm ＝ 84 mm。',
+            '1. 小明的鉛筆：8 cm 4 mm ＝ 10 × 8 ＋ 4 mm ＝ 84 mm。',
             '2. 小華的鉛筆：79 mm。',
             '3. 84 mm ＞ 79 mm，所以小明的比較長。',
             '4. 相差：84 － 79 ＝ 5 (mm)。'
@@ -322,7 +336,7 @@ window.DECK = window.DECK || [];
           '觀察動態圖解如何把公分拆成每 10 mm 一組，算出總毫米數！',
           '掌握公分與毫米之間的位值對應關係。'
         ],
-        formula: { label: '雙向單位轉換', tex: 'X\\text{ cm } Y\\text{ mm} \\iff (X \\times 10 + Y)\\text{ mm}' },
+        formula: { label: '雙向單位轉換', tex: 'X\\text{ cm } Y\\text{ mm} \\iff (10 \\times X + Y)\\text{ mm}' },
         visual: (h) => {
           h.innerHTML = `
             <div style="width:100%; font-family:sans-serif;">
@@ -375,7 +389,7 @@ window.DECK = window.DECK || [];
             let s = '';
             s += `<div style="font-size:14px; font-weight:800; color:#334155; margin-bottom:8px;">拆解計算推演：</div>`;
             s += `<div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap; font-size:14px; font-weight:900;">`;
-            s += `<span style="background:#ecfdf5; border:1px solid #059669; padding:4px 10px; border-radius:6px; color:#059669;">${cm} cm ＝ ${cm} × 10 ＝ ${cm * 10} mm</span>`;
+            s += `<span style="background:#ecfdf5; border:1px solid #059669; padding:4px 10px; border-radius:6px; color:#059669;">${cm} cm ＝ 10 × ${cm} ＝ ${cm * 10} mm</span>`;
             s += `<span>＋</span>`;
             s += `<span style="background:#fff1f2; border:1px solid #e11d48; padding:4px 10px; border-radius:6px; color:#e11d48;">${mm} mm</span>`;
             s += `<span>＝</span>`;
@@ -418,85 +432,161 @@ window.DECK = window.DECK || [];
         example: {
           q: '把 7 公分 3 毫米換算成毫米，算式該怎麼寫？',
           steps: [
-            '1. 先算公分換毫米：7 公分 ＝ 7 × 10 ＝ 70 毫米。',
+            '1. 先算公分換毫米：7 公分 ＝ 10 × 7 ＝ 70 毫米。',
             '2. 再加上 3 毫米：70 毫米 ＋ 3 毫米 ＝ 73 毫米。'
           ],
           ans: '73 毫米'
         }
       },
 
-      /* ==================== 3-3 長度的加減計算 ==================== */
+      /* ==================== 3-3 長度的加減計算（升級：步驟推演器） ==================== */
       {
         sec: '3-3', secName: '長度的加減計算',
-        title: '公分對公分、毫米對毫米，滿10毫米要進位',
+        title: '公分對公分、毫米對毫米，滿10毫米要進位（分步推演器）',
         points: [
-          '進行長度複名數（幾公分幾毫米）直式計算時：',
-          '**同單位對齊**：分成「公分」與「毫米」兩欄。',
-          '**加法進位**：毫米相加滿 10 mm，向公分欄**進 1 cm**。',
-          '**減法借位**：毫米欄不夠減時，向公分欄**借 1 cm (換成 10 mm)** 再減。'
+          '**同單位對齊**：直式分成「公分 (cm)」與「毫米 (mm)」兩欄。',
+          '點擊 `[Step 1 ~ Step 3]` 按鈕，分步觀察加法進位與減法借位的直式步驟。',
+          '切換「加法」與「減法」兩種範例，比較進/借位的差異。'
         ],
-        formula: { label: '進借位核心', tex: '10\\text{ mm} \\rightleftarrows 1\\text{ cm}' },
+        formula: { label: '進借位核心', tex: '10\\\\text{ mm} \\\\rightleftarrows 1\\\\text{ cm}' },
         visual: (h) => {
-          let out = '';
-          out += BOX(15, 15, 188, 225, { fill: '#ecfdf5', stroke: GRN, r: 12 });
-          out += TX(109, 38, '【加法進位】範例', { fs: 14, c: GRN, anchor: 'middle', fw: '900' });
-          out += TX(109, 58, '4 cm 8 mm ＋ 1 cm 5 mm', { fs: 12, c: '#065f46', anchor: 'middle' });
+          h.innerHTML = `
+            <div style="width:100%; font-family:sans-serif;">
+              <div style="display:flex; gap:8px; margin-bottom:8px;">
+                <button id="lenAddBtn" style="flex:1; padding:5px; border-radius:8px; border:1.5px solid #059669; background:#059669; color:#fff; font-weight:900; font-size:12px; cursor:pointer;">➕ 加法進位</button>
+                <button id="lenSubBtn" style="flex:1; padding:5px; border-radius:8px; border:1.5px solid #cbd5e1; background:#fff; color:#334155; font-weight:900; font-size:12px; cursor:pointer;">➖ 減法借位</button>
+              </div>
+              <div id="lenCalcStage" style="background:#f8fafc; border:1px solid #cbd5e1; border-radius:10px; padding:10px; height:170px; overflow:hidden;"></div>
+              <div style="display:flex; gap:8px; margin-top:8px; align-items:center;">
+                <button id="lenReset" style="padding:5px 12px; border-radius:8px; border:1px solid #cbd5e1; background:#fff; font-weight:800; font-size:12px; cursor:pointer;">↺ 重置</button>
+                <button id="lenNext" style="flex:1; padding:6px; border-radius:8px; border:none; background:linear-gradient(120deg, #059669, #0284c7); color:#fff; font-weight:900; font-size:13px; cursor:pointer;">Step N: 下一步 →</button>
+              </div>
+            </div>
+          `;
 
-          out += TX(65, 90, 'cm', { fs: 13, c: '#64748b', anchor: 'middle', fw: '900' });
-          out += TX(135, 90, 'mm', { fs: 13, c: '#64748b', anchor: 'middle', fw: '900' });
+          let mode = 'ADD'; // 'ADD' or 'SUB'
+          let step = 0;
 
-          out += TX(65, 118, '4', { fs: 16, c: '#0f172a', anchor: 'middle', fw: '900' });
-          out += TX(135, 118, '8', { fs: 16, c: '#0f172a', anchor: 'middle', fw: '900' });
-          out += TX(35, 142, '＋', { fs: 16, c: '#0f172a', anchor: 'middle', fw: '900' });
-          out += TX(65, 142, '1', { fs: 16, c: '#0f172a', anchor: 'middle', fw: '900' });
-          out += TX(135, 142, '5', { fs: 16, c: '#0f172a', anchor: 'middle', fw: '900' });
+          const addBtn = h.querySelector('#lenAddBtn');
+          const subBtn = h.querySelector('#lenSubBtn');
+          const stage = h.querySelector('#lenCalcStage');
+          const lenReset = h.querySelector('#lenReset');
+          const lenNext = h.querySelector('#lenNext');
 
-          out += `<line x1="30" y1="152" x2="165" y2="152" stroke="#0f172a" stroke-width="2"/>`;
+          const STEPS = {
+            ADD: [
+              '點擊開始，觀察「4 cm 8 mm ＋ 1 cm 5 mm」的直式。',
+              'Step 1：毫米欄相加 — 8 ＋ 5 ＝ 13 mm。',
+              'Step 2：13 mm 滿 10 mm → 寫 3，向公分欄進 1！',
+              'Step 3：公分欄：4 ＋ 1 ＋進位 1 ＝ 6 cm。答案：6 cm 3 mm ✅'
+            ],
+            SUB: [
+              '點擊開始，觀察「5 cm 2 mm－2 cm 7 mm」的直式。',
+              'Step 1：毫米欄 2 不夠減 7，需向公分欄借 1 cm！',
+              'Step 2：借 1 cm 換 10 mm → 毫米欄變成 10 ＋ 2 ＝ 12 mm，12 ＋ 7 ＝ 5 mm。',
+              'Step 3：公分欄：5 ＋ 1（已借）＝ 4，4 ＋ 2 ＝ 2 cm。答案：2 cm 5 mm ✅'
+            ]
+          };
 
-          out += TX(65, 76, '①', { fs: 13, c: RED, anchor: 'middle', fw: '900' });
-          out += TX(65, 178, '6', { fs: 17, c: RED, anchor: 'middle', fw: '900' });
-          out += TX(135, 178, '3', { fs: 17, c: RED, anchor: 'middle', fw: '900' });
+          function renderLenCalc() {
+            const isAdd = mode === 'ADD';
+            let s = '';
 
-          out += TX(109, 215, '答：6 cm 3 mm', { fs: 14, c: RED, anchor: 'middle', fw: '900' });
+            if (isAdd) {
+              const lCol = 55, rCol = 130;
+              s += TX(lCol, 18, 'cm', { fs: 13, c: '#64748b', anchor: 'middle', fw: '900' });
+              s += TX(rCol, 18, 'mm', { fs: 13, c: '#64748b', anchor: 'middle', fw: '900' });
 
-          out += BOX(217, 15, 188, 225, { fill: '#fff1f2', stroke: RED, r: 12 });
-          out += TX(311, 38, '【減法借位】範例', { fs: 14, c: RED, anchor: 'middle', fw: '900' });
-          out += TX(311, 58, '5 cm 2 mm － 2 cm 7 mm', { fs: 12, c: '#9f1239', anchor: 'middle' });
+              // 進位標記
+              if (step >= 2) s += TX(lCol, 8, '①', { fs: 13, c: RED, anchor: 'middle', fw: '900' });
 
-          out += TX(267, 90, 'cm', { fs: 13, c: '#64748b', anchor: 'middle', fw: '900' });
-          out += TX(337, 90, 'mm', { fs: 13, c: '#64748b', anchor: 'middle', fw: '900' });
+              s += TX(lCol, 46, '4', { fs: 16, c: '#0f172a', anchor: 'middle', fw: '900' });
+              s += TX(rCol, 46, '8', { fs: 16, c: '#0f172a', anchor: 'middle', fw: '900' });
+              s += TX(22, 68, '＋', { fs: 16, c: '#0f172a', anchor: 'middle', fw: '900' });
+              s += TX(lCol, 68, '1', { fs: 16, c: '#0f172a', anchor: 'middle', fw: '900' });
+              s += TX(rCol, 68, step >= 1 ? '5' : '5', { fs: 16, c: step >= 1 ? AMB : '#0f172a', anchor: 'middle', fw: '900' });
 
-          out += `<line x1="260" y1="108" x2="274" y2="124" stroke="${RED}" stroke-width="2"/>`;
-          out += TX(267, 76, '4', { fs: 13, c: RED, anchor: 'middle', fw: '900' });
-          out += TX(337, 76, '10', { fs: 13, c: RED, anchor: 'middle', fw: '900' });
+              s += `<line x1="18" y1="78" x2="165" y2="78" stroke="#0f172a" stroke-width="2"/>`;
 
-          out += TX(267, 118, '5', { fs: 16, c: '#0f172a', anchor: 'middle', fw: '900' });
-          out += TX(337, 118, '2', { fs: 16, c: '#0f172a', anchor: 'middle', fw: '900' });
-          out += TX(237, 142, '－', { fs: 16, c: '#0f172a', anchor: 'middle', fw: '900' });
-          out += TX(267, 142, '2', { fs: 16, c: '#0f172a', anchor: 'middle', fw: '900' });
-          out += TX(337, 142, '7', { fs: 16, c: '#0f172a', anchor: 'middle', fw: '900' });
+              // 中間過渡值
+              if (step >= 1) s += TX(rCol, 103, step >= 2 ? '3' : '13', { fs: 16, c: step >= 2 ? GRN : AMB, anchor: 'middle', fw: '900' });
+              if (step >= 3) s += TX(lCol, 103, '6', { fs: 17, c: GRN, anchor: 'middle', fw: '900' });
 
-          out += `<line x1="232" y1="152" x2="367" y2="152" stroke="#0f172a" stroke-width="2"/>`;
+              // 右側說明
+              s += `<rect x="185" y="8" width="165" height="130" rx="8" fill="#ecfdf5" stroke="#059669" stroke-width="1.5"/>`;
+              const desc = STEPS.ADD[step];
+              const lines = []; let tmp = desc;
+              while (tmp.length > 18) { lines.push(tmp.slice(0, 18)); tmp = tmp.slice(18); }
+              lines.push(tmp);
+              lines.forEach((ln, i) => { s += TX(267, 32 + i * 22, ln, { fs: 12, c: '#065f46', anchor: 'middle', fw: '800' }); });
 
-          out += TX(267, 178, '2', { fs: 17, c: RED, anchor: 'middle', fw: '900' });
-          out += TX(337, 178, '5', { fs: 17, c: RED, anchor: 'middle', fw: '900' });
+            } else {
+              const lCol = 55, rCol = 140;
+              s += TX(lCol, 18, 'cm', { fs: 13, c: '#64748b', anchor: 'middle', fw: '900' });
+              s += TX(rCol, 18, 'mm', { fs: 13, c: '#64748b', anchor: 'middle', fw: '900' });
 
-          out += TX(311, 215, '答：2 cm 5 mm', { fs: 14, c: RED, anchor: 'middle', fw: '900' });
+              // 借位標記
+              if (step >= 1) {
+                s += `<line x1="48" y1="35" x2="62" y2="51" stroke="${RED}" stroke-width="2"/>`;
+                s += TX(lCol, 28, '4', { fs: 13, c: RED, anchor: 'middle', fw: '900' });
+              }
+              if (step >= 2) {
+                s += TX(rCol, 28, '12', { fs: 11, c: RED, anchor: 'middle', fw: '900' });
+              }
 
-          h.innerHTML = svg('0 0 420 250', out);
+              s += TX(lCol, 46, '5', { fs: 16, c: '#0f172a', anchor: 'middle', fw: '900' });
+              s += TX(rCol, 46, '2', { fs: 16, c: '#0f172a', anchor: 'middle', fw: '900' });
+              s += TX(18, 68, '－', { fs: 16, c: '#0f172a', anchor: 'middle', fw: '900' });
+              s += TX(lCol, 68, '2', { fs: 16, c: '#0f172a', anchor: 'middle', fw: '900' });
+              s += TX(rCol, 68, '7', { fs: 16, c: step >= 1 ? AMB : '#0f172a', anchor: 'middle', fw: '900' });
+
+              s += `<line x1="18" y1="78" x2="175" y2="78" stroke="#0f172a" stroke-width="2"/>`;
+
+              if (step >= 2) s += TX(rCol, 103, '5', { fs: 16, c: RED, anchor: 'middle', fw: '900' });
+              if (step >= 3) s += TX(lCol, 103, '2', { fs: 17, c: RED, anchor: 'middle', fw: '900' });
+
+              s += `<rect x="193" y="8" width="165" height="130" rx="8" fill="#fff1f2" stroke="#e11d48" stroke-width="1.5"/>`;
+              const desc = STEPS.SUB[step];
+              const lines = []; let tmp = desc;
+              while (tmp.length > 18) { lines.push(tmp.slice(0, 18)); tmp = tmp.slice(18); }
+              lines.push(tmp);
+              lines.forEach((ln, i) => { s += TX(275, 32 + i * 22, ln, { fs: 12, c: '#9f1239', anchor: 'middle', fw: '800' }); });
+            }
+
+            stage.innerHTML = `<svg viewBox="0 0 370 155" style="width:100%; height:100%;">${s}</svg>`;
+            lenNext.textContent = step < 3 ? `Step ${step + 1}: 下一步 →` : '✅ 完成！';
+          }
+
+          addBtn.onclick = () => {
+            mode = 'ADD'; step = 0;
+            addBtn.style.background = '#059669'; addBtn.style.color = '#fff'; addBtn.style.borderColor = '#059669';
+            subBtn.style.background = '#fff'; subBtn.style.color = '#334155'; subBtn.style.borderColor = '#cbd5e1';
+            renderLenCalc();
+          };
+          subBtn.onclick = () => {
+            mode = 'SUB'; step = 0;
+            subBtn.style.background = '#e11d48'; subBtn.style.color = '#fff'; subBtn.style.borderColor = '#e11d48';
+            addBtn.style.background = '#fff'; addBtn.style.color = '#334155'; addBtn.style.borderColor = '#cbd5e1';
+            renderLenCalc();
+          };
+          lenReset.onclick = () => { step = 0; renderLenCalc(); };
+          lenNext.onclick = () => { if (step < 3) { step++; renderLenCalc(); } };
+          renderLenCalc();
         },
         caption: '8＋5＝13 毫米，寫 3 毫米進 1 公分；減法 2 毫米不夠減 7 毫米，向公分借 1 當 10。',
         example: {
           q: '藍色絲帶長 6 公分 3 毫米，紅色絲帶長 3 公分 8 毫米，兩條絲帶相差多少公分多少毫米？',
           steps: [
-            '1. 直式對齊：6 cm 3 mm － 3 cm 8 mm。',
-            '2. 毫米不夠減 (3 － 8)：向 6 cm 借 1 cm 變 5 cm，毫米變成 10 ＋ 3 ＝ 13 mm。',
-            '3. 毫米算：13 － 8 ＝ 5 mm。',
-            '4. 公分算：5 － 3 ＝ 2 cm。'
+            '1. 直式對齊：6 cm 3 mm－3 cm 8 mm。',
+            '2. 毫米不夠減 (3－8)：向 6 cm 借 1 cm 變 5 cm，毫米變成 10＋3＝13 mm。',
+            '3. 毫米算：13－8＝5 mm。',
+            '4. 公分算：5－3＝2 cm。'
           ],
           ans: '相差 2 公分 5 毫米'
         }
       }
+
+
     ]
   });
 })();
