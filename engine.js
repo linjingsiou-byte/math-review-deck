@@ -33,13 +33,16 @@
   function fitEl(box, content) {
     if (!box || !content) return;
     content.style.transform = 'none';
-    content.style.transformOrigin = 'center top';
+    content.style.transformOrigin = 'left top';
+    content.style.width = '100%';
     const comp = window.getComputedStyle(box);
     const pad = parseFloat(comp.paddingTop || 0) + parseFloat(comp.paddingBottom || 0);
     const avail = box.clientHeight - pad;
     const need = content.scrollHeight;
     if (avail > 0 && need > avail + 1) {
-      content.style.transform = 'scale(' + Math.max(0.5, (avail - 4) / need) + ')';
+      const scale = Math.max(0.65, (avail - 4) / need);
+      content.style.transform = 'scale(' + scale.toFixed(4) + ')';
+      content.style.width = (100 / scale).toFixed(2) + '%';
     }
   }
   function fitSlide() {
@@ -289,7 +292,7 @@
       let html = `<div class="badge">第 ${s.ch} 章 · ${s.sec} ${s.secName || ''}</div>
         <h2 class="slide-title">${renderTitle(s.title)}</h2>`;
       if (s.formula) {
-        html += `<div class="formula">${s.formula.label ? `<div class="formula-label">${s.formula.label}</div>` : ''}$$${s.formula.tex}$$</div>`;
+        html += `<div class="formula">${s.formula.label ? `<div class="formula-label">${s.formula.label}</div>` : ''}<div class="formula-body">\\(${s.formula.tex}\\)</div></div>`;
       }
       if (s.points && s.points.length) {
         html += `<ul class="points">${s.points.map(p => `<li>${p}</li>`).join('')}</ul>`;

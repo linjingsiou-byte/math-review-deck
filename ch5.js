@@ -94,58 +94,112 @@ window.DECK = window.DECK || [];
 
       {
         sec: '5-1', secName: '認識角與邊頂點',
-        title: '【破除迷思】動態拉長邊長，觀察角度是否改變！',
+        title: '【雙滑桿實驗】動態調整「角度」與「邊長」，驗證「邊長不影響角的大小」！',
         points: [
           '⚡ **致命迷思破解**：三年級學生常以為「邊長畫越長，角就越大」。',
-          '試著拖動下方的「邊長」滑桿，觀察<span class="k">兩邊張開的角度始終不變</span>！'
+          '拖動<span class="k">「張開角度」滑桿</span>改變角度，或拖動<span class="k">「邊長長度」滑桿</span>延伸邊長。',
+          '觀察重點：<span class="k">無論邊長拉多長或縮多短，兩邊張開的角度完全不會改變！</span>'
         ],
         visual: (h) => {
-          h.innerHTML = `<div style="width:100%;text-align:center;padding:4px">
-            <svg viewBox="0 0 400 180" style="max-width:100%">
-              <g class="armg"></g>
-            </svg>
-            <div class="ictrl" style="margin-top:6px;background:#ecfeff;padding:8px 12px;border-radius:10px;border:1.5px solid #0891b2">
-              <label style="font-weight:900;font-size:14.5px;color:#0891b2">拖動邊長長度：<span class="ival lenv" style="font-size:17px;color:#e11d48">60</span> px</label>
-              <input class="len-r" type="range" min="40" max="110" step="5" value="60" style="width:85%;margin-top:4px">
+          h.innerHTML = `
+            <div style="width:100%;text-align:center;padding:4px;font-family:sans-serif;">
+              <div style="display:flex;gap:6px;justify-content:center;margin-bottom:8px;">
+                <button class="ang-preset-btn" data-ang="30" style="padding:3px 10px;border-radius:6px;border:1.5px solid #0891b2;background:#fff;color:#0891b2;font-weight:800;font-size:12px;cursor:pointer;">📐 30°</button>
+                <button class="ang-preset-btn" data-ang="45" style="padding:3px 10px;border-radius:6px;border:1.5px solid #0891b2;background:#0891b2;color:#fff;font-weight:800;font-size:12px;cursor:pointer;">📐 45°</button>
+                <button class="ang-preset-btn" data-ang="60" style="padding:3px 10px;border-radius:6px;border:1.5px solid #0891b2;background:#fff;color:#0891b2;font-weight:800;font-size:12px;cursor:pointer;">📐 60°</button>
+                <button class="ang-preset-btn" data-ang="90" style="padding:3px 10px;border-radius:6px;border:1.5px solid #0891b2;background:#fff;color:#0891b2;font-weight:800;font-size:12px;cursor:pointer;">📐 90° (直角)</button>
+                <button class="ang-preset-btn" data-ang="120" style="padding:3px 10px;border-radius:6px;border:1.5px solid #0891b2;background:#fff;color:#0891b2;font-weight:800;font-size:12px;cursor:pointer;">📐 120° (鈍角)</button>
+              </div>
+
+              <svg viewBox="0 0 400 175" style="max-width:100%;background:#fafafa;border:1px solid #cbd5e1;border-radius:12px;">
+                <g class="armg"></g>
+              </svg>
+
+              <div style="margin-top:8px;display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+                <div class="ictrl" style="background:#ecfeff;padding:8px 12px;border-radius:10px;border:1.5px solid #0891b2">
+                  <label style="font-weight:900;font-size:13.5px;color:#0891b2">① 張開角度：<span class="ival angv" style="font-size:16px;color:#0891b2">45</span>°</label>
+                  <input class="ang-r" type="range" min="15" max="150" step="5" value="45" style="width:100%;margin-top:4px">
+                </div>
+                <div class="ictrl" style="background:#fff1f2;padding:8px 12px;border-radius:10px;border:1.5px solid #f43f5e">
+                  <label style="font-weight:900;font-size:13.5px;color:#e11d48">② 邊長長度：<span class="ival lenv" style="font-size:16px;color:#e11d48">60</span> px</label>
+                  <input class="len-r" type="range" min="35" max="110" step="5" value="60" style="width:100%;margin-top:4px">
+                </div>
+              </div>
             </div>
-          </div>`;
-          const sl = h.querySelector('.len-r'), lenv = h.querySelector('.lenv'), armg = h.querySelector('.armg');
-          sl.oninput = () => {
-            const L = +sl.value;
+          `;
+
+          const angSl = h.querySelector('.ang-r');
+          const lenSl = h.querySelector('.len-r');
+          const angv = h.querySelector('.angv');
+          const lenv = h.querySelector('.lenv');
+          const armg = h.querySelector('.armg');
+          const presetBtns = h.querySelectorAll('.ang-preset-btn');
+
+          function render() {
+            const ang = +angSl.value;
+            const L = +lenSl.value;
+            angv.textContent = ang;
             lenv.textContent = L;
-            const vx = 140, vy = 140, ang = 45;
+
+            const vx = 135, vy = 135;
             const rad = ang * Math.PI / 180;
             const x1 = vx + L;
             const y1 = vy;
             const x2 = vx + L * Math.cos(-rad);
             const y2 = vy + L * Math.sin(-rad);
 
-            let out = `<rect x="10" y="10" width="380" height="160" rx="12" fill="#fafafa" stroke="#cbd5e1" stroke-width="1.8"/>`;
+            let out = '';
+            // 背景底圖
+            out += `<rect x="5" y="5" width="390" height="165" rx="10" fill="#ffffff" stroke="#e2e8f0" stroke-width="1"/>`;
+
             // 角兩條邊
-            out += `<line x1="${vx}" y1="${vy}" x2="${x1}" y2="${y1}" stroke="#0891b2" stroke-width="4" stroke-linecap="round"/>`;
-            out += `<line x1="${vx}" y1="${vy}" x2="${x2}" y2="${y2}" stroke="#0891b2" stroke-width="4" stroke-linecap="round"/>`;
-            out += `<circle cx="${vx}" cy="${vy}" r="6" fill="#e11d48"/>`;
-            
-            // 弧線
-            out += `<path d="M ${vx + 35} ${vy} A 35 35 0 0 0 ${vx + 35 * Math.cos(-rad)} ${vy + 35 * Math.sin(-rad)}" fill="rgba(8,145,178,0.25)" stroke="#0891b2" stroke-width="2"/>`;
-            out += `<text x="${vx + 48}" y="${vy - 12}" font-size="15" font-weight="900" fill="#0891b2">45°</text>`;
+            out += `<line x1="${vx}" y1="${vy}" x2="${x1}" y2="${y1}" stroke="#0891b2" stroke-width="4.5" stroke-linecap="round"/>`;
+            out += `<line x1="${vx}" y1="${vy}" x2="${x2}" y2="${y2}" stroke="#0891b2" stroke-width="4.5" stroke-linecap="round"/>`;
+            out += `<circle cx="${vx}" cy="${vy}" r="6.5" fill="#e11d48"/>`;
+            out += `<text x="${vx - 14}" y="${vy + 18}" font-size="11.5" font-weight="900" fill="#e11d48">頂點</text>`;
+
+            // 弧線與角度文字
+            const arcR = Math.min(36, Math.max(22, L * 0.45));
+            const arcX = vx + arcR * Math.cos(-rad / 2);
+            const arcY = vy + arcR * Math.sin(-rad / 2);
+            out += `<path d="M ${vx + arcR} ${vy} A ${arcR} ${arcR} 0 0 0 ${vx + arcR * Math.cos(-rad)} ${vy + arcR * Math.sin(-rad)}" fill="rgba(8,145,178,0.2)" stroke="#0891b2" stroke-width="2.2"/>`;
+            out += `<text x="${arcX + 10}" y="${arcY - 6}" font-size="14.5" font-weight="900" fill="#0891b2">${ang}°</text>`;
 
             // 邊長虛線指示
             out += `<line x1="${vx}" y1="${vy + 12}" x2="${x1}" y2="${vy + 12}" stroke="#e11d48" stroke-width="1.5" stroke-dasharray="4,3"/>`;
-            out += `<text x="${(vx + x1)/2}" y="${vy + 26}" text-anchor="middle" font-size="12" font-weight="900" fill="#e11d48">邊長 ＝ ${L} px</text>`;
+            out += `<text x="${(vx + x1)/2}" y="${vy + 26}" text-anchor="middle" font-size="11.5" font-weight="900" fill="#e11d48">邊長 ＝ ${L} px</text>`;
 
-            // 右側結論框
-            out += `<rect x="250" y="30" width="130" height="110" rx="10" fill="#f0fdf4" stroke="#059669" stroke-width="2"/>`;
-            out += `<text x="315" y="55" text-anchor="middle" font-size="13" font-weight="900" fill="#059669">檢驗結論</text>`;
-            out += `<text x="315" y="80" text-anchor="middle" font-size="12" font-weight="800" fill="#1e293b">張角恆為 45°</text>`;
-            out += `<text x="315" y="102" text-anchor="middle" font-size="12" font-weight="900" fill="#e11d48">邊長改變</text>`;
-            out += `<text x="315" y="122" text-anchor="middle" font-size="12" font-weight="900" fill="#059669">角的大小不變！</text>`;
+            // 右側驗證結論框
+            out += `<rect x="245" y="20" width="140" height="135" rx="10" fill="#f0fdf4" stroke="#059669" stroke-width="2"/>`;
+            out += `<text x="315" y="42" text-anchor="middle" font-size="13.5" font-weight="900" fill="#059669">🎉 雙滑桿驗證</text>`;
+            out += `<line x1="255" y1="50" x2="375" y2="50" stroke="#a7f3d0" stroke-width="1.5"/>`;
+            out += `<text x="315" y="70" text-anchor="middle" font-size="12" font-weight="800" fill="#1e293b">① 角度 ＝ <tspan font-weight="900" fill="#0891b2">${ang}°</tspan></text>`;
+            out += `<text x="315" y="92" text-anchor="middle" font-size="12" font-weight="800" fill="#1e293b">② 邊長 ＝ <tspan font-weight="900" fill="#e11d48">${L} px</tspan></text>`;
+            out += `<rect x="252" y="103" width="126" height="42" rx="6" fill="#dcfce7" stroke="#10b981" stroke-width="1"/>`;
+            out += `<text x="315" y="120" text-anchor="middle" font-size="11.5" font-weight="900" fill="#047857">邊長無論多長或多短</text>`;
+            out += `<text x="315" y="137" text-anchor="middle" font-size="12" font-weight="900" fill="#047857">✨ 角度恆等於 ${ang}°！</text>`;
 
             armg.innerHTML = out;
-          };
-          sl.oninput();
+          }
+
+          angSl.oninput = render;
+          lenSl.oninput = render;
+
+          presetBtns.forEach(btn => {
+            btn.onclick = () => {
+              const a = +btn.getAttribute('data-ang');
+              angSl.value = a;
+              presetBtns.forEach(b => {
+                b.style.background = '#fff'; b.style.color = '#0891b2';
+              });
+              btn.style.background = '#0891b2'; btn.style.color = '#fff';
+              render();
+            };
+          });
+
+          render();
         },
-        caption: '動態拖動邊長：兩邊無論延伸多長，張開幅度與角度數值完全一樣，角的大小絕不受邊長影響！',
+        caption: '雙滑桿實驗：可獨立拖動「角度」與「邊長」。學生可親自證實：改變邊長完全不影響角度的大小！',
         example: {
           q: '大偉拿放大鏡看一個 30 度的角，透過放大鏡看，這個角會變大嗎？',
           steps: [
@@ -182,9 +236,12 @@ window.DECK = window.DECK || [];
                 <!-- SVG 角落與三角板繪製區 -->
               </div>
 
-              <div class="ictrl" style="margin-top:8px;">
+              <div class="ictrl" style="margin-top:8px; display:flex; flex-wrap:wrap; justify-content:center; gap:6px;">
                 <label>張開角度：<span class="ival" id="degSliderVal">90</span>°</label>
-                <input type="range" id="degSlider" min="15" max="165" value="90" step="5" style="width:100%;">
+                <input type="range" id="degSlider" min="15" max="165" value="90" step="5" style="width:140px;">
+                <button class="snap-rect-btn" style="padding:4px 8px; border-radius:6px; border:1px solid #059669; background:#ecfdf5; color:#059669; font-weight:900; font-size:12px; cursor:pointer;">直角 (90°)</button>
+                <button class="snap-acute-btn" style="padding:4px 8px; border-radius:6px; border:1px solid #2563eb; background:#eff6ff; color:#2563eb; font-weight:900; font-size:12px; cursor:pointer;">銳角 (45°)</button>
+                <button class="snap-obtuse-btn" style="padding:4px 8px; border-radius:6px; border:1px solid #d97706; background:#fffbeb; color:#d97706; font-weight:900; font-size:12px; cursor:pointer;">鈍角 (135°)</button>
               </div>
             </div>
           `;
@@ -274,6 +331,19 @@ window.DECK = window.DECK || [];
           };
 
           slider.oninput = renderAngle;
+
+          const setSnap = (angle) => {
+            slider.value = angle;
+            showTri = true;
+            triBtn.style.background = '#0891b2';
+            triBtn.style.color = '#fff';
+            renderAngle();
+          };
+
+          h.querySelector('.snap-rect-btn').onclick = () => setSnap(90);
+          h.querySelector('.snap-acute-btn').onclick = () => setSnap(45);
+          h.querySelector('.snap-obtuse-btn').onclick = () => setSnap(135);
+
           renderAngle();
         },
         caption: '將三角板直角頂點與角落疊合、一邊貼齊，即可精準判定直角、銳角與鈍角。',

@@ -272,16 +272,22 @@ window.DECK = window.DECK || [];
       /* ==================== 4-2 互動教具：二位數乘法 CPA 面積拆解對照器 ==================== */
       {
         sec: '4-2', secName: '二位數乘以一位數',
-        title: '【CPA 矩形面積拆解】二位數乘法直式與區域面積對照器',
+        title: '【CPA 矩形面積拆解】二位數乘法直式與分步積區域對照器',
         points: [
           '拉動「被乘數 (二位數)」與「乘數 (一位數)」。',
-          '觀察左側「矩形區域面積」如何將二位數拆解成十位（長方形）與個位（小長方形）。',
-          '右側同步對照直式計算的每一步算式！'
+          '點擊下方 `[Step 1: 高亮個位相乘]` 或 `[Step 2: 高亮十位相乘]` 按鈕，雙向高亮左側矩形區域與右側直式算式！',
+          '體會乘法分配律：先算個位、再算十位，最後相加得總積（矩形寬度依十位與個位數值真實比例動態呈現）。'
         ],
         formula: { label: '面積拆解法則', tex: '(\\text{十位} + \\text{個位}) \\times \\text{乘數}' },
         visual: (h) => {
           h.innerHTML = `
             <div style="width:100%; font-family:sans-serif;">
+              <div style="display:flex; gap:8px; margin-bottom:8px; justify-content:center;">
+                <button id="cpaStepAll" class="cpa-step-btn active" style="padding:4px 10px; border-radius:6px; border:1.5px solid #d97706; background:#d97706; color:#fff; font-weight:800; font-size:12px; cursor:pointer;">✨ Step 0: 呈現全貌 (總積)</button>
+                <button id="cpaStepOnes" class="cpa-step-btn" style="padding:4px 10px; border-radius:6px; border:1.5px solid #cbd5e1; background:#fff; color:#334155; font-weight:800; font-size:12px; cursor:pointer;">1️⃣ Step 1: 高亮個位相乘 (個位區)</button>
+                <button id="cpaStepTens" class="cpa-step-btn" style="padding:4px 10px; border-radius:6px; border:1.5px solid #cbd5e1; background:#fff; color:#334155; font-weight:800; font-size:12px; cursor:pointer;">2️⃣ Step 2: 高亮十位相乘 (十位區)</button>
+              </div>
+
               <div id="cpaAreaStage" style="background:#f8fafc; border:1px solid #cbd5e1; border-radius:10px; padding:12px; height:185px;">
                 <!-- SVG 圖案由 JS 繪製 -->
               </div>
@@ -299,11 +305,16 @@ window.DECK = window.DECK || [];
             </div>
           `;
 
+          let activeHighlight = 'ALL'; // 'ALL', 'ONES', 'TENS'
           const numSlider = h.querySelector('#cpaNumSlider');
           const kSlider = h.querySelector('#cpaKSlider');
           const numVal = h.querySelector('#cpaNumVal');
           const kVal = h.querySelector('#cpaKVal');
           const stage = h.querySelector('#cpaAreaStage');
+
+          const btnAll = h.querySelector('#cpaStepAll');
+          const btnOnes = h.querySelector('#cpaStepOnes');
+          const btnTens = h.querySelector('#cpaStepTens');
 
           function renderCPA() {
             const N = parseInt(numSlider.value, 10);
@@ -318,30 +329,62 @@ window.DECK = window.DECK || [];
             numVal.textContent = N;
             kVal.textContent = K;
 
+            // 動態計算矩形寬度（真實比例呈現）
+            const maxTotalW = 160;
+            let tensW, onesW;
+            if (ones === 0) {
+              tensW = maxTotalW;
+              onesW = 0;
+            } else {
+              const minOnesW = 32;
+              const minTensW = 45;
+              const available = maxTotalW - minOnesW - minTensW;
+              tensW = minTensW + Math.round((tens / N) * available);
+              onesW = maxTotalW - tensW;
+            }
+
+            const rectH = 80;
+
             let s = '';
             // 左半部：矩形面積拆解圖
             s += `<g transform="translate(10, 15)">`;
-            s += TX(80, 12, `${N} (拆成 ${tens} ＋ ${ones})`, { fs: 12, c: '#334155', anchor: 'middle', fw: '900' });
+            s += TX(10 + maxTotalW / 2, 12, `${N} (拆成 ${tens} ＋ ${ones})`, { fs: 12, c: '#334155', anchor: 'middle', fw: '900' });
 
             // 十位矩形
-            const tensW = 100;
-            const onesW = 40;
-            const rectH = 80;
+            const isTensHighlighted = activeHighlight === 'ALL' || activeHighlight === 'TENS';
+            const tensFill = isTensHighlighted ? '#fef3c7' : '#f8fafc';
+            const tensStroke = isTensHighlighted ? '#f59e0b' : '#cbd5e1';
+            const tensSw = activeHighlight === 'TENS' ? '3.5' : '1.8';
 
-            s += `<rect x="10" y="20" width="${tensW}" height="${rectH}" fill="#fef3c7" stroke="#f59e0b" stroke-width="1.8" rx="4"/>`;
-            s += TX(10 + tensW / 2, 20 + rectH / 2, `${tens} × ${K} = ${areaTens}`, { fs: 11.5, c: AMB, anchor: 'middle', fw: '900' });
+            s += `<rect x="10" y="20" width="${tensW}" height="${rectH}" fill="${tensFill}" stroke="${tensStroke}" stroke-width="${tensSw}" rx="4"/>`;
+            const textTens = tensW > 70 ? `${tens} × ${K} = ${areaTens}` : `${tens}×${K}=${areaTens}`;
+            const fsTens = tensW > 70 ? 11.5 : (tensW > 50 ? 10 : 9);
+            s += TX(10 + tensW / 2, 20 + rectH / 2, textTens, { fs: fsTens, c: isTensHighlighted ? AMB : '#94a3b8', anchor: 'middle', fw: '900' });
 
             // 個位矩形
-            s += `<rect x="${10 + tensW}" y="20" width="${onesW}" height="${rectH}" fill="#fee2e2" stroke="#ef4444" stroke-width="1.8" rx="4"/>`;
-            s += TX(10 + tensW + onesW / 2, 20 + rectH / 2, `${ones}×${K}=${areaOnes}`, { fs: 10.5, c: RED, anchor: 'middle', fw: '900' });
+            if (onesW > 0) {
+              const isOnesHighlighted = activeHighlight === 'ALL' || activeHighlight === 'ONES';
+              const onesFill = isOnesHighlighted ? '#fee2e2' : '#f8fafc';
+              const onesStroke = isOnesHighlighted ? '#ef4444' : '#cbd5e1';
+              const onesSw = activeHighlight === 'ONES' ? '3.5' : '1.8';
 
-            s += TX(10 + (tensW + onesW) / 2, 20 + rectH + 20, `總面積 ＝ ${areaTens} ＋ ${areaOnes} ＝ ${total}`, { fs: 12.5, c: BLU, anchor: 'middle', fw: '900' });
+              s += `<rect x="${10 + tensW}" y="20" width="${onesW}" height="${rectH}" fill="${onesFill}" stroke="${onesStroke}" stroke-width="${onesSw}" rx="4"/>`;
+              const textOnes = onesW > 50 ? `${ones} × ${K} = ${areaOnes}` : `${ones}×${K}=${areaOnes}`;
+              const fsOnes = onesW > 50 ? 11 : (onesW > 35 ? 9.5 : 8.5);
+              s += TX(10 + tensW + onesW / 2, 20 + rectH / 2, textOnes, { fs: fsOnes, c: isOnesHighlighted ? RED : '#94a3b8', anchor: 'middle', fw: '900' });
+            }
+
+            let totalText = `總面積 ＝ ${areaTens} ＋ ${areaOnes} ＝ ${total}`;
+            if (activeHighlight === 'ONES') totalText = `1️⃣ Step 1 個位相乘：${ones} × ${K} ＝ ${areaOnes}`;
+            else if (activeHighlight === 'TENS') totalText = `2️⃣ Step 2 十位相乘：${tens} × ${K} ＝ ${areaTens}`;
+
+            s += TX(10 + maxTotalW / 2, 20 + rectH + 20, totalText, { fs: 12.5, c: activeHighlight === 'ONES' ? RED : (activeHighlight === 'TENS' ? AMB : BLU), anchor: 'middle', fw: '900' });
             s += `</g>`;
 
             // 右半部：對照直式
-            s += `<g transform="translate(240, 15)">`;
-            s += BOX(0, 0, 130, 150, { fill: '#fff', stroke: '#cbd5e1', r: 8 });
-            s += TX(65, 20, '直式計算對照', { fs: 12, c: '#64748b', anchor: 'middle', fw: '800' });
+            s += `<g transform="translate(235, 15)">`;
+            s += BOX(0, 0, 135, 150, { fill: '#fff', stroke: '#cbd5e1', r: 8 });
+            s += TX(67.5, 20, '直式計算對照', { fs: 12, c: '#64748b', anchor: 'middle', fw: '800' });
 
             const digitTen = Math.floor(N / 10);
             s += TX(55, 48, digitTen.toString(), { fs: 16, c: '#0f172a', anchor: 'middle', fw: '900' });
@@ -349,19 +392,33 @@ window.DECK = window.DECK || [];
             s += TX(25, 72, '×', { fs: 16, c: '#0f172a', anchor: 'middle', fw: '900' });
             s += TX(85, 72, K.toString(), { fs: 16, c: '#0f172a', anchor: 'middle', fw: '900' });
 
-            s += `<line x1="20" y1="80" x2="110" y2="80" stroke="#0f172a" stroke-width="1.8"/>`;
+            s += `<line x1="20" y1="80" x2="115" y2="80" stroke="#0f172a" stroke-width="1.8"/>`;
 
             const carry = Math.floor(areaOnes / 10);
+            const isOnesHighlighted = activeHighlight === 'ALL' || activeHighlight === 'ONES';
             if (carry > 0) {
-              s += TX(55, 34, `(${carry})`, { fs: 11, c: RED, anchor: 'middle', fw: '900' });
+              s += TX(55, 34, `(${carry})`, { fs: 11, c: isOnesHighlighted ? RED : '#94a3b8', anchor: 'middle', fw: '900' });
             }
 
             const resStr = total.toString();
-            s += TX(65, 110, resStr, { fs: 18, c: RED, anchor: 'middle', fw: '900' });
+            s += TX(67.5, 110, resStr, { fs: 18, c: activeHighlight === 'ONES' ? RED : (activeHighlight === 'TENS' ? AMB : RED), anchor: 'middle', fw: '900' });
             s += `</g>`;
 
             stage.innerHTML = `<svg viewBox="0 0 380 180" style="width:100%; height:100%;">${s}</svg>`;
           }
+
+          function setHighlightMode(mode, activeBtn) {
+            activeHighlight = mode;
+            [btnAll, btnOnes, btnTens].forEach(b => {
+              b.style.background = '#fff'; b.style.color = '#334155'; b.style.borderColor = '#cbd5e1';
+            });
+            activeBtn.style.background = '#d97706'; activeBtn.style.color = '#fff'; activeBtn.style.borderColor = '#d97706';
+            renderCPA();
+          }
+
+          btnAll.onclick = () => setHighlightMode('ALL', btnAll);
+          btnOnes.onclick = () => setHighlightMode('ONES', btnOnes);
+          btnTens.onclick = () => setHighlightMode('TENS', btnTens);
 
           numSlider.oninput = renderCPA;
           kSlider.oninput = renderCPA;

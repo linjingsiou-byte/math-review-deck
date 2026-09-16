@@ -313,13 +313,16 @@ button { font: inherit; cursor: pointer; }
 
 .formula {
   background: color-mix(in srgb, var(--ct) 8%, #fff);
-  border: 1px solid color-mix(in srgb, var(--ct) 24%, #fff);
+  border: 1.5px solid color-mix(in srgb, var(--ct) 24%, #fff);
   border-radius: 12px;
-  padding: 10px 14px;
+  padding: 8px 14px;
   margin-bottom: 12px;
-  overflow-x: auto;
+  overflow: visible;
+  box-shadow: 0 2px 8px rgba(30, 42, 68, 0.04);
 }
-.formula .formula-label { font-size: 12px; font-weight: 900; color: var(--ct); letter-spacing: 0.06em; margin-bottom: 4px; }
+.formula .formula-label { font-size: 12px; font-weight: 900; color: var(--ct); letter-spacing: 0.06em; margin-bottom: 3px; }
+.formula .formula-body { font-size: 16px; font-weight: 800; color: var(--ct); text-align: center; line-height: 1.4; padding: 2px 0; }
+.formula mjx-container { margin: 0 !important; padding: 0 !important; }
 
 .points { list-style: none; margin: 0 0 16px; padding: 0; }
 .points li {

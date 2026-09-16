@@ -183,9 +183,9 @@ window.DECK = window.DECK || [];
           h.innerHTML = `<div style="width:100%;text-align:center;padding:2px">
             <div style="display:flex;justify-content:center;gap:6px;margin-bottom:8px;flex-wrap:nowrap;align-items:center">
               <button class="play-btn btn-play">▶️ 播放動畫</button>
-              <button class="step-btn btn-0 active">1. 原圖(135+247)</button>
-              <button class="step-btn btn-1">2. 🟡 圈選10個</button>
-              <button class="step-btn btn-2">3. ✨ 換成1條進位</button>
+              <button class="step-btn btn-0 active">Step 1: 原圖(135+247)</button>
+              <button class="step-btn btn-1">Step 2: 🟡 圈選10個</button>
+              <button class="step-btn btn-2">Step 3: ✨ 換成1條進位</button>
             </div>
             <div class="addg"></div>
           </div>`;
@@ -429,10 +429,10 @@ window.DECK = window.DECK || [];
           h.innerHTML = `<div style="width:100%;text-align:center;padding:2px">
             <div style="display:flex;justify-content:center;gap:6px;margin-bottom:8px;flex-wrap:nowrap;align-items:center">
               <button class="play-btn btn-play">▶️ 播放動畫</button>
-              <button class="step-btn btn-0 active">1. 原圖(300)</button>
-              <button class="step-btn btn-1">2. ✂️ 拆1百格板到十位</button>
-              <button class="step-btn btn-2">3. ✂️ 拆1長條到個位</button>
-              <button class="step-btn btn-3">4. ✨ 扣減剩153</button>
+              <button class="step-btn btn-0 active">Step 1: 原圖(300)</button>
+              <button class="step-btn btn-1">Step 2: ✂️ 拆1百格板到十位</button>
+              <button class="step-btn btn-2">Step 3: ✂️ 拆1長條到個位</button>
+              <button class="step-btn btn-3">Step 4: ✨ 扣減剩153</button>
             </div>
             <div class="subg"></div>
           </div>`;
@@ -558,39 +558,76 @@ window.DECK = window.DECK || [];
         ],
         formula: { label: '整千數退位減法', tex: '6000 - 2685 = 3315' },
         visual: (h) => {
-          let out = BOX(40, 15, 320, 150, { fill: '#fffbe8', stroke: AMB });
-          out += TX(200, 38, '6000 － 2685 ＝ 3315 的連續退位標記', { fs: 15, c: AMB, anchor: 'middle' });
+          h.innerHTML = `<div style="width:100%;text-align:center;padding:4px">
+            <div class="sub6g"></div>
+            <div class="ictrl" style="margin-top:6px; display:flex; flex-wrap:wrap; justify-content:center; gap:6px;">
+              <button class="bstep-0" style="padding:4px 8px; border-radius:6px; border:1px solid #cbd5e1; background:#fff; font-weight:800; font-size:12px; cursor:pointer;">0. 初始題目</button>
+              <button class="bstep-1" style="padding:4px 8px; border-radius:6px; border:1px solid #7c3aed; background:#f5f3ff; color:#7c3aed; font-weight:900; font-size:12px; cursor:pointer;">1. 千位借位 (6➔5,百10)</button>
+              <button class="bstep-2" style="padding:4px 8px; border-radius:6px; border:1px solid #2563eb; background:#eff6ff; color:#2563eb; font-weight:900; font-size:12px; cursor:pointer;">2. 百位借位 (百9,十10)</button>
+              <button class="bstep-3" style="padding:4px 8px; border-radius:6px; border:1px solid #d97706; background:#fffbeb; color:#d97706; font-weight:900; font-size:12px; cursor:pointer;">3. 十位借位 (十9,個10)</button>
+              <button class="bstep-4" style="padding:4px 8px; border-radius:6px; border:1px solid #059669; background:#ecfdf5; color:#059669; font-weight:900; font-size:12px; cursor:pointer;">4. 完成減法計算</button>
+            </div>
+          </div>`;
 
-          const cols = [90, 130, 170, 210, 250];
-          out += TX(cols[1], 58, '千', { fs: 11, c: '#64748b', anchor: 'middle' });
-          out += TX(cols[2], 58, '百', { fs: 11, c: '#64748b', anchor: 'middle' });
-          out += TX(cols[3], 58, '十', { fs: 11, c: '#64748b', anchor: 'middle' });
-          out += TX(cols[4], 58, '個', { fs: 11, c: '#64748b', anchor: 'middle' });
+          let bstep = 0;
+          const stage = h.querySelector('.sub6g');
 
-          out += TX(cols[1], 75, '5', { fs: 12, c: RED, anchor: 'middle' });
-          out += TX(cols[2], 75, '9', { fs: 12, c: RED, anchor: 'middle' });
-          out += TX(cols[3], 75, '9', { fs: 12, c: RED, anchor: 'middle' });
-          out += TX(cols[4], 75, '10', { fs: 12, c: RED, anchor: 'middle' });
+          const update = (sVal) => {
+            bstep = sVal;
+            let out = BOX(40, 15, 320, 150, { fill: '#fffbe8', stroke: AMB });
+            out += TX(200, 35, '6000 － 2685 ＝ 3315 分步退位標記連動', { fs: 14, c: AMB, anchor: 'middle', fw: '900' });
 
-          out += TX(cols[1], 96, '6', { fs: 16, anchor: 'middle' });
-          out += TX(cols[2], 96, '0', { fs: 16, anchor: 'middle' });
-          out += TX(cols[3], 96, '0', { fs: 16, anchor: 'middle' });
-          out += TX(cols[4], 96, '0', { fs: 16, anchor: 'middle' });
+            const cols = [90, 130, 170, 210, 250];
+            out += TX(cols[1], 54, '千', { fs: 11, c: '#64748b', anchor: 'middle' });
+            out += TX(cols[2], 54, '百', { fs: 11, c: '#64748b', anchor: 'middle' });
+            out += TX(cols[3], 54, '十', { fs: 11, c: '#64748b', anchor: 'middle' });
+            out += TX(cols[4], 54, '個', { fs: 11, c: '#64748b', anchor: 'middle' });
 
-          out += TX(cols[0], 118, '－', { fs: 16, c: AMB, anchor: 'middle' });
-          out += TX(cols[1], 118, '2', { fs: 16, anchor: 'middle' });
-          out += TX(cols[2], 118, '6', { fs: 16, anchor: 'middle' });
-          out += TX(cols[3], 118, '8', { fs: 16, anchor: 'middle' });
-          out += TX(cols[4], 118, '5', { fs: 16, anchor: 'middle' });
+            // 頂頭標記
+            if (bstep >= 1) {
+              out += TX(cols[1], 68, '5', { fs: 12, c: RED, anchor: 'middle', fw: '900' });
+              out += `<line x1="124" y1="78" x2="136" y2="92" stroke="${RED}" stroke-width="2"/>`;
+              out += TX(cols[2], 68, bstep >= 2 ? '9' : '10', { fs: 12, c: RED, anchor: 'middle', fw: '900' });
+            }
+            if (bstep >= 2) {
+              out += `<line x1="164" y1="78" x2="176" y2="92" stroke="${RED}" stroke-width="2"/>`;
+              out += TX(cols[3], 68, bstep >= 3 ? '9' : '10', { fs: 12, c: RED, anchor: 'middle', fw: '900' });
+            }
+            if (bstep >= 3) {
+              out += `<line x1="204" y1="78" x2="216" y2="92" stroke="${RED}" stroke-width="2"/>`;
+              out += TX(cols[4], 68, '10', { fs: 12, c: RED, anchor: 'middle', fw: '900' });
+            }
 
-          out += `<line x1="80" y1="124" x2="265" y2="124" stroke="#172033" stroke-width="2"/>`;
+            out += TX(cols[1], 90, '6', { fs: 16, anchor: 'middle' });
+            out += TX(cols[2], 90, '0', { fs: 16, anchor: 'middle' });
+            out += TX(cols[3], 90, '0', { fs: 16, anchor: 'middle' });
+            out += TX(cols[4], 90, '0', { fs: 16, anchor: 'middle' });
 
-          out += TX(cols[1], 146, '3', { fs: 18, c: AMB, anchor: 'middle' });
-          out += TX(cols[2], 146, '3', { fs: 18, c: AMB, anchor: 'middle' });
-          out += TX(cols[3], 146, '1', { fs: 18, c: AMB, anchor: 'middle' });
-          out += TX(cols[4], 146, '5', { fs: 18, c: AMB, anchor: 'middle' });
+            out += TX(cols[0], 112, '－', { fs: 16, c: AMB, anchor: 'middle' });
+            out += TX(cols[1], 112, '2', { fs: 16, anchor: 'middle' });
+            out += TX(cols[2], 112, '6', { fs: 16, anchor: 'middle' });
+            out += TX(cols[3], 112, '8', { fs: 16, anchor: 'middle' });
+            out += TX(cols[4], 112, '5', { fs: 16, anchor: 'middle' });
 
-          h.innerHTML = svg('0 0 400 180', out);
+            out += `<line x1="80" y1="118" x2="265" y2="118" stroke="#172033" stroke-width="2"/>`;
+
+            if (bstep === 4) {
+              out += TX(cols[1], 142, '3', { fs: 18, c: GRN, anchor: 'middle', fw: '900' });
+              out += TX(cols[2], 142, '3', { fs: 18, c: GRN, anchor: 'middle', fw: '900' });
+              out += TX(cols[3], 142, '1', { fs: 18, c: GRN, anchor: 'middle', fw: '900' });
+              out += TX(cols[4], 142, '5', { fs: 18, c: GRN, anchor: 'middle', fw: '900' });
+            }
+
+            stage.innerHTML = svg('0 0 400 160', out);
+          };
+
+          h.querySelector('.bstep-0').onclick = () => update(0);
+          h.querySelector('.bstep-1').onclick = () => update(1);
+          h.querySelector('.bstep-2').onclick = () => update(2);
+          h.querySelector('.bstep-3').onclick = () => update(3);
+          h.querySelector('.bstep-4').onclick = () => update(4);
+
+          update(3);
         },
         caption: '向千位 6 借 1 後，千位變 5，百位與十位變 9，個位獲得 10。',
         example: {
