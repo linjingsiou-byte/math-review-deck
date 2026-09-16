@@ -370,33 +370,46 @@ window.DECK = window.DECK || [];
         formula: { label: '四邊形直角特性', tex: '\\text{正方形/長方形} \\Rightarrow 4\\text{ 個角都是直角 (90}^\\circ)' },
         visual: (h) => {
           let out = '';
-          out += BOX(15, 15, 188, 225, { fill: '#ecfeff', stroke: CYN, r: 12 });
-          out += TX(109, 38, '【正方形】4直角 + 4邊等長', { fs: 13.5, c: CYN, anchor: 'middle', fw: '900' });
+          // 1. 正方形
+          out += BOX(10, 15, 125, 225, { fill: '#ecfeff', stroke: CYN, r: 10 });
+          out += TX(72.5, 36, '正方形', { fs: 14, c: CYN, anchor: 'middle', fw: '900' });
 
-          const sx = 59, sy = 65, sw = 100;
-          out += `<rect x="${sx}" y="${sy}" width="${sw}" height="${sw}" fill="#cff4fc" stroke="${CYN}" stroke-width="2.5" rx="4"/>`;
+          const sx = 32.5, sy = 65, sw = 80;
+          out += `<rect x="${sx}" y="${sy}" width="${sw}" height="${sw}" fill="#cff4fc" stroke="${CYN}" stroke-width="2" rx="4"/>`;
 
-          out += `<rect x="${sx}" y="${sy}" width="14" height="14" fill="none" stroke="${RED}" stroke-width="1.8"/>`;
-          out += `<rect x="${sx + sw - 14}" y="${sy}" width="14" height="14" fill="none" stroke="${RED}" stroke-width="1.8"/>`;
-          out += `<rect x="${sx}" y="${sy + sw - 14}" width="14" height="14" fill="none" stroke="${RED}" stroke-width="1.8"/>`;
-          out += `<rect x="${sx + sw - 14}" y="${sy + sw - 14}" width="14" height="14" fill="none" stroke="${RED}" stroke-width="1.8"/>`;
+          out += `<rect x="${sx}" y="${sy}" width="12" height="12" fill="none" stroke="${RED}" stroke-width="1.6"/>`;
+          out += `<rect x="${sx + sw - 12}" y="${sy}" width="12" height="12" fill="none" stroke="${RED}" stroke-width="1.6"/>`;
+          out += `<rect x="${sx}" y="${sy + sw - 12}" width="12" height="12" fill="none" stroke="${RED}" stroke-width="1.6"/>`;
+          out += `<rect x="${sx + sw - 12}" y="${sy + sw - 12}" width="12" height="12" fill="none" stroke="${RED}" stroke-width="1.6"/>`;
 
-          out += TX(109, 195, '4 個角都是直角 └┐', { fs: 12, c: RED, anchor: 'middle', fw: '900' });
-          out += TX(109, 215, '4 條邊等長', { fs: 12, c: CYN, anchor: 'middle', fw: '800' });
+          out += TX(72.5, 175, '4 個直角 └┐', { fs: 11.5, c: RED, anchor: 'middle', fw: '900' });
+          out += TX(72.5, 195, '4 條邊等長', { fs: 11.5, c: CYN, anchor: 'middle', fw: '800' });
 
-          out += BOX(217, 15, 188, 225, { fill: '#eff6ff', stroke: BLU, r: 12 });
-          out += TX(311, 38, '【長方形】4直角 + 對邊相等', { fs: 13.5, c: BLU, anchor: 'middle', fw: '900' });
+          // 2. 長方形
+          out += BOX(145, 15, 130, 225, { fill: '#eff6ff', stroke: BLU, r: 10 });
+          out += TX(210, 36, '長方形', { fs: 14, c: BLU, anchor: 'middle', fw: '900' });
 
-          const rx = 246, ry = 80, rw = 130, rh = 75;
-          out += `<rect x="${rx}" y="${ry}" width="${rw}" height="${rh}" fill="#dbeafe" stroke="${BLU}" stroke-width="2.5" rx="4"/>`;
+          const rx = 160, ry = 75, rw = 100, rh = 60;
+          out += `<rect x="${rx}" y="${ry}" width="${rw}" height="${rh}" fill="#dbeafe" stroke="${BLU}" stroke-width="2" rx="4"/>`;
 
-          out += `<rect x="${rx}" y="${ry}" width="14" height="14" fill="none" stroke="${RED}" stroke-width="1.8"/>`;
-          out += `<rect x="${rx + rw - 14}" y="${ry}" width="14" height="14" fill="none" stroke="${RED}" stroke-width="1.8"/>`;
-          out += `<rect x="${rx}" y="${ry + rh - 14}" width="14" height="14" fill="none" stroke="${RED}" stroke-width="1.8"/>`;
-          out += `<rect x="${rx + rw - 14}" y="${ry + rh - 14}" width="14" height="14" fill="none" stroke="${RED}" stroke-width="1.8"/>`;
+          out += `<rect x="${rx}" y="${ry}" width="12" height="12" fill="none" stroke="${RED}" stroke-width="1.6"/>`;
+          out += `<rect x="${rx + rw - 12}" y="${ry}" width="12" height="12" fill="none" stroke="${RED}" stroke-width="1.6"/>`;
+          out += `<rect x="${rx}" y="${ry + rh - 12}" width="12" height="12" fill="none" stroke="${RED}" stroke-width="1.6"/>`;
+          out += `<rect x="${rx + rw - 12}" y="${ry + rh - 12}" width="12" height="12" fill="none" stroke="${RED}" stroke-width="1.6"/>`;
 
-          out += TX(311, 195, '4 個角都是直角 └┐', { fs: 12, c: RED, anchor: 'middle', fw: '900' });
-          out += TX(311, 215, '上下邊相等，左右邊相等', { fs: 11.5, c: BLU, anchor: 'middle', fw: '800' });
+          out += TX(210, 175, '4 個直角 └┐', { fs: 11.5, c: RED, anchor: 'middle', fw: '900' });
+          out += TX(210, 195, '對邊相等', { fs: 11.5, c: BLU, anchor: 'middle', fw: '800' });
+
+          // 3. 菱形對比 (迷思破解)
+          out += BOX(285, 15, 125, 225, { fill: '#fff1f2', stroke: RED, r: 10 });
+          out += TX(347.5, 36, '⚡ 菱形 (對比)', { fs: 13, c: RED, anchor: 'middle', fw: '900' });
+
+          // 菱形路徑
+          const rmx = 347.5, rmy = 105;
+          out += `<polygon points="${rmx},${rmy - 35} ${rmx + 35},${rmy} ${rmx},${rmy + 35} ${rmx - 35},${rmy}" fill="#ffe4e6" stroke="${RED}" stroke-width="2"/>`;
+
+          out += TX(347.5, 175, '沒有直角！', { fs: 11.5, c: RED, anchor: 'middle', fw: '900' });
+          out += TX(347.5, 195, '2個銳角 + 2個鈍角', { fs: 11, c: '#b91c1c', anchor: 'middle', fw: '800' });
 
           h.innerHTML = svg('0 0 420 250', out);
         },

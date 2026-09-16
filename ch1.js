@@ -286,41 +286,79 @@ window.DECK = window.DECK || [];
         }
       },
 
-
-
       {
         sec: '1-1',
         secName: '認識10000以內的數',
-        title: '【易錯關卡】四位數的讀法與寫法',
+        title: '【易錯關卡】四位數的正確讀法大挑戰 (點擊驗證！)',
         points: [
-          '✗ <span style="color:#e11d48">1300 讀作一千三</span> ➔ 正確應讀作 <span class="k">一千三百</span>。',
-          '✗ <span style="color:#e11d48">3005 讀作三千零零五</span> ➔ 中間連續零 <span class="k">只讀一個零</span>。'
+          '⚡ **迷思破解**：口語可以簡稱（如一千三），但數學正式讀法必須把<span class="k">完整位名</span>讀出來！',
+          '點擊下方數字題目的正確讀法，考考你的讀法觀念是否清晰！'
         ],
         visual: (h) => {
-          h.innerHTML = `<div style="width:100%;text-align:center">
-            <table style="width:95%;margin:auto;border-collapse:collapse;font-size:15px;text-align:center;box-shadow:0 4px 12px rgba(0,0,0,0.06)">
-              <tr style="background:#2563eb;color:#fff;font-weight:700">
-                <th style="padding:8px;border:1px solid #cbd5e1">數字</th>
-                <th style="padding:8px;border:1px solid #cbd5e1">常見錯誤 (✗)</th>
-                <th style="padding:8px;border:1px solid #cbd5e1">正確讀法 (✓)</th>
-              </tr>
-              <tr style="background:#fff">
-                <td style="padding:8px;border:1px solid #cbd5e1;font-weight:700">1300</td>
-                <td style="padding:8px;border:1px solid #cbd5e1;color:#e11d48">一千三</td>
-                <td style="padding:8px;border:1px solid #cbd5e1;color:#059669;font-weight:700">一千三百</td>
-              </tr>
-              <tr style="background:#f8fafc">
-                <td style="padding:8px;border:1px solid #cbd5e1;font-weight:700">3005</td>
-                <td style="padding:8px;border:1px solid #cbd5e1;color:#e11d48">三千零零五</td>
-                <td style="padding:8px;border:1px solid #cbd5e1;color:#059669;font-weight:700">三千零五</td>
-              </tr>
-              <tr style="background:#fff">
-                <td style="padding:8px;border:1px solid #cbd5e1;font-weight:700">4020</td>
-                <td style="padding:8px;border:1px solid #cbd5e1;color:#e11d48">四千零二十零</td>
-                <td style="padding:8px;border:1px solid #cbd5e1;color:#059669;font-weight:700">四千零二十</td>
-              </tr>
-            </table>
-          </div>`;
+          h.innerHTML = `
+            <div style="width:100%;text-align:center;font-family:sans-serif;padding:4px;">
+              <div id="quizStage" style="background:#f8fafc;border:1px solid #cbd5e1;border-radius:12px;padding:12px;min-height:160px;">
+                <!-- 題目由 JS 動態切換 -->
+              </div>
+              <div style="display:flex;justify-content:center;gap:8px;margin-top:8px;">
+                <button class="qtab active" data-q="0" style="padding:4px 12px;border-radius:6px;border:1px solid #2563eb;background:#2563eb;color:#fff;font-weight:800;font-size:12px;cursor:pointer;">第 1 題 (1300)</button>
+                <button class="qtab" data-q="1" style="padding:4px 12px;border-radius:6px;border:1.5px solid #cbd5e1;background:#fff;color:#334155;font-weight:800;font-size:12px;cursor:pointer;">第 2 題 (3005)</button>
+                <button class="qtab" data-q="2" style="padding:4px 12px;border-radius:6px;border:1.5px solid #cbd5e1;background:#fff;color:#334155;font-weight:800;font-size:12px;cursor:pointer;">第 3 題 (4020)</button>
+              </div>
+            </div>
+          `;
+
+          const questions = [
+            { num: '1300', opts: ['一千三', '一千三百', '一千零三0'], ans: 1, note: '末尾的 0 不讀，但 3 在百位必須讀出「三百」！' },
+            { num: '3005', opts: ['三千零零五', '三千零五', '三千五'], ans: 1, note: '中間有連續的 0 時，只讀一個「零」！' },
+            { num: '4020', opts: ['四千零二十零', '四千二十', '四千零二十'], ans: 2, note: '中間百位的 0 要讀一個零，末尾個位的 0 完全不讀！' }
+          ];
+
+          let currIdx = 0;
+          const stage = h.querySelector('#quizStage');
+          const tabs = h.querySelectorAll('.qtab');
+
+          function renderQ() {
+            const q = questions[currIdx];
+            let out = `
+              <div style="font-size:16px;font-weight:900;color:#0f172a;margin-bottom:10px;">
+                請問數字 <span style="color:#2563eb;font-size:22px;">${q.num}</span> 的正式讀法是？
+              </div>
+              <div style="display:flex;flex-direction:column;gap:8px;max-width:320px;margin:auto;">
+            `;
+            q.opts.forEach((opt, idx) => {
+              out += `<button class="opt-btn" data-idx="${idx}" style="padding:8px 14px;border-radius:8px;border:1.5px solid #cbd5e1;background:#fff;font-size:14px;font-weight:800;color:#334155;cursor:pointer;">${opt}</button>`;
+            });
+            out += `</div><div id="qFeedback" style="margin-top:10px;min-height:36px;"></div>`;
+            stage.innerHTML = out;
+
+            const optBtns = stage.querySelectorAll('.opt-btn');
+            const fb = stage.querySelector('#qFeedback');
+
+            optBtns.forEach(btn => {
+              btn.onclick = () => {
+                const idx = +btn.getAttribute('data-idx');
+                if (idx === q.ans) {
+                  btn.style.background = '#dcfce7'; btn.style.borderColor = '#059669'; btn.style.color = '#047857';
+                  fb.innerHTML = `<div style="background:#f0fdf4;border:1.5px solid #059669;border-radius:8px;padding:6px;color:#047857;font-weight:900;font-size:13px;">🎉 答對了！ ${q.note}</div>`;
+                } else {
+                  btn.style.background = '#fee2e2'; btn.style.borderColor = '#ef4444'; btn.style.color = '#991b1b';
+                  fb.innerHTML = `<div style="background:#fff1f2;border:1.5px solid #ef4444;border-radius:8px;padding:6px;color:#991b1b;font-weight:900;font-size:13px;">❌ 不對喔！${q.note}</div>`;
+                }
+              };
+            });
+          }
+
+          tabs.forEach(tab => {
+            tab.onclick = () => {
+              tabs.forEach(t => { t.style.background = '#fff'; t.style.color = '#334155'; t.style.borderColor = '#cbd5e1'; });
+              tab.style.background = '#2563eb'; tab.style.color = '#fff'; tab.style.borderColor = '#2563eb';
+              currIdx = +tab.getAttribute('data-q');
+              renderQ();
+            };
+          });
+
+          renderQ();
         },
         caption: '請記住：口語可以簡稱，但正式讀法必須把位名完整的讀出來！'
       },

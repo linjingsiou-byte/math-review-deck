@@ -503,25 +503,80 @@ window.DECK = window.DECK || [];
           '✓ 先把單位統一：<span class="k">5 片餅乾 ＝ \\(\\frac{5}{10}\\) 盒（5 片）</span>，\\(\\frac{5}{10} \\text{ 盒} > \\frac{4}{10} \\text{ 盒}\\)！'
         ],
         visual: (h) => {
-          h.innerHTML = `<div style="width:100%;text-align:center">
-            <table style="width:95%;margin:auto;border-collapse:collapse;font-size:14.5px;text-align:center;box-shadow:0 4px 12px rgba(0,0,0,0.06)">
-              <tr style="background:#0ea5e9;color:#fff;font-weight:700">
-                <th style="padding:8px;border:1px solid #cbd5e1">題目條件</th>
-                <th style="padding:8px;border:1px solid #cbd5e1">常見迷思 (✗)</th>
-                <th style="padding:8px;border:1px solid #cbd5e1">正確觀念 (✓)</th>
-              </tr>
-              <tr style="background:#fff">
-                <td style="padding:8px;border:1px solid #cbd5e1;font-weight:700">品妍 5 片 vs 柏宇 \\(\\frac{4}{10}\\) 盒</td>
-                <td style="padding:8px;border:1px solid #cbd5e1;color:#e11d48">直接用數字 5 和 4 比較（混淆個與盒）</td>
-                <td style="padding:8px;border:1px solid #cbd5e1;color:#059669;font-weight:700">5 片 ＝ \\(\\frac{5}{10}\\) 盒，\\(\\frac{5}{10} > \\frac{4}{10}\\) 盒</td>
-              </tr>
-              <tr style="background:#f8fafc">
-                <td style="padding:8px;border:1px solid #cbd5e1;font-weight:700">水蜜桃 6 顆 vs \\(\\frac{5}{12}\\) 盒</td>
-                <td style="padding:8px;border:1px solid #cbd5e1;color:#e11d48">以為 6 個是一大包數字不確定</td>
-                <td style="padding:8px;border:1px solid #cbd5e1;color:#059669;font-weight:700">6 顆 ＝ \\(\\frac{6}{12}\\) 盒，\\(\\frac{6}{12} > \\frac{5}{12}\\) 盒</td>
-              </tr>
-            </table>
-          </div>`;
+          h.innerHTML = `
+            <div style="width:100%;text-align:center;font-family:sans-serif;padding:4px;">
+              <div id="unitQuizStage" style="background:#f8fafc;border:1px solid #cbd5e1;border-radius:12px;padding:12px;min-height:150px;"></div>
+              <div style="display:flex;justify-content:center;gap:8px;margin-top:8px;">
+                <button class="utab active" data-q="0" style="padding:4px 12px;border-radius:6px;border:1px solid #0ea5e9;background:#0ea5e9;color:#fff;font-weight:800;font-size:12px;cursor:pointer;">情境 1 (5片 vs 4/10盒)</button>
+                <button class="utab" data-q="1" style="padding:4px 12px;border-radius:6px;border:1.5px solid #cbd5e1;background:#fff;color:#334155;font-weight:800;font-size:12px;cursor:pointer;">情境 2 (6顆 vs 5/12盒)</button>
+              </div>
+            </div>
+          `;
+
+          const questions = [
+            {
+              title: '一盒餅乾有 10 片。品妍拿 5 片，柏宇拿 4/10 盒，誰拿得多？',
+              opts: [
+                { text: '5 > 4/10 ➔ 數字 5 大於 4/10，所以品妍多 (錯誤迷思)', ok: false },
+                { text: '5 片 ＝ 5/10 盒，5/10 盒 > 4/10 盒 ➔ 品妍多 (正確步驟)', ok: true }
+              ],
+              note: '不能拿「片」直接跟「盒」的數字比較，必須先把 5 片換算成 5/10 盒才能比較！'
+            },
+            {
+              title: '一盒水蜜桃有 12 顆。小明拿 6 顆，小華拿 5/12 盒，誰拿得多？',
+              opts: [
+                { text: '6 顆 ＝ 6/12 盒，6/12 盒 > 5/12 盒 ➔ 小明多 (正確步驟)', ok: true },
+                { text: '單位不同無法比較 (錯誤迷思)', ok: false }
+              ],
+              note: '只要知道一盒有 12 顆，6 顆就可以寫成 6/12 盒，統一單位就能比較了！'
+            }
+          ];
+
+          let currIdx = 0;
+          const stage = h.querySelector('#unitQuizStage');
+          const tabs = h.querySelectorAll('.utab');
+
+          function renderQuiz() {
+            const q = questions[currIdx];
+            let out = `
+              <div style="font-size:15px;font-weight:900;color:#0f172a;margin-bottom:8px;">
+                ${q.title}
+              </div>
+              <div style="display:flex;flex-direction:column;gap:8px;max-width:380px;margin:10px auto;">
+            `;
+            q.opts.forEach((o, i) => {
+              out += `<button class="u-opt" data-ok="${o.ok}" style="padding:8px 12px;border-radius:8px;border:1.5px solid #cbd5e1;background:#fff;font-size:13px;font-weight:800;color:#334155;cursor:pointer;text-align:left;">${o.text}</button>`;
+            });
+            out += `</div><div id="uFeedback" style="min-height:36px;"></div>`;
+            stage.innerHTML = out;
+
+            const optBtns = stage.querySelectorAll('.u-opt');
+            const fb = stage.querySelector('#uFeedback');
+
+            optBtns.forEach(btn => {
+              btn.onclick = () => {
+                const ok = btn.getAttribute('data-ok') === 'true';
+                if (ok) {
+                  btn.style.background = '#dcfce7'; btn.style.borderColor = '#059669'; btn.style.color = '#047857';
+                  fb.innerHTML = `<div style="background:#f0fdf4;border:1.5px solid #059669;border-radius:8px;padding:6px;color:#047857;font-weight:900;font-size:13px;">🎉 觀念完全正確！ ${q.note}</div>`;
+                } else {
+                  btn.style.background = '#fee2e2'; btn.style.borderColor = '#ef4444'; btn.style.color = '#991b1b';
+                  fb.innerHTML = `<div style="background:#fff1f2;border:1.5px solid #ef4444;border-radius:8px;padding:6px;color:#991b1b;font-weight:900;font-size:13px;">❌ 注意迷思！${q.note}</div>`;
+                }
+              };
+            });
+          }
+
+          tabs.forEach(tab => {
+            tab.onclick = () => {
+              tabs.forEach(t => { t.style.background = '#fff'; t.style.color = '#334155'; t.style.borderColor = '#cbd5e1'; });
+              tab.style.background = '#0ea5e9'; tab.style.color = '#fff'; tab.style.borderColor = '#0ea5e9';
+              currIdx = +tab.getAttribute('data-q');
+              renderQuiz();
+            };
+          });
+
+          renderQuiz();
         },
         caption: '解題關鍵：比較大小前，記得先把單位統一成相同的單位（都是盒）！',
         example: {

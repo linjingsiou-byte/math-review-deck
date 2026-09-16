@@ -416,9 +416,16 @@ window.DECK = window.DECK || [];
 
             for (let c = 0; c <= 10; c++) {
               const x = barStartX + (c * 10 / 109) * barW;
-              svgContent += `<line x1="${x}" y1="15" x2="${x}" y2="38" stroke="#0f172a" stroke-width="1.2"/>`;
-              svgContent += `<text x="${x}" y="52" text-anchor="middle" font-size="11" font-weight="800" fill="#64748b">${c}cm</text>`;
+              const isSelectedCm = c === cm;
+              svgContent += `<line x1="${x}" y1="15" x2="${x}" y2="${isSelectedCm ? '42' : '38'}" stroke="${isSelectedCm ? '#059669' : '#0f172a'}" stroke-width="${isSelectedCm ? '2.5' : '1.2'}"/>`;
+              svgContent += `<text x="${x}" y="53" text-anchor="middle" font-size="11" font-weight="${isSelectedCm ? '900' : '800'}" fill="${isSelectedCm ? '#059669' : '#64748b'}">${c}cm</text>`;
             }
+
+            // 直尺上的動態紅點/標記線 (雙滑桿 ↔ 迷你直尺視覺連結)
+            const targetX = barStartX + Math.min(barW, (total / 109) * barW);
+            svgContent += `<line x1="${targetX}" y1="5" x2="${targetX}" y2="40" stroke="#ef4444" stroke-width="2.5" stroke-dasharray="3,2"/>`;
+            svgContent += `<circle cx="${targetX}" cy="15" r="4.5" fill="#ef4444"/>`;
+            svgContent += `<text x="${Math.max(35, Math.min(barStartX + barW - 25, targetX))}" y="10" text-anchor="middle" font-size="11" font-weight="900" fill="#ef4444">📍 ${total}mm</text>`;
 
             s += `<div style="margin-top:12px;">${svg('0 0 400 60', svgContent)}</div>`;
             calcStage.innerHTML = s;

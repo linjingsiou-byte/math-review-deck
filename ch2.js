@@ -653,27 +653,64 @@ window.DECK = window.DECK || [];
         ],
         formula: { label: '概數估算', tex: '3852 \\approx 4000' },
         visual: (h) => {
-          let out = BOX(30, 20, 340, 140, { fill: '#f0f9ff', stroke: BLU });
-          out += TX(200, 42, '3852 公尺在數線上的估算（接近 4000）', { fs: 14, c: BLU, anchor: 'middle' });
+          h.innerHTML = `
+            <div style="width:100%;text-align:center;font-family:sans-serif;padding:4px;">
+              <svg viewBox="0 0 400 135" style="max-width:100%;background:#f0f9ff;border:1px solid #cbd5e1;border-radius:12px;">
+                <g class="estg"></g>
+              </svg>
+              <div class="ictrl" style="margin-top:8px;background:#e0f2fe;padding:8px 12px;border-radius:10px;border:1.5px solid #0284c7;">
+                <label style="font-weight:900;font-size:14px;color:#0369a1;">拖動數線數值：<span class="ival numv" style="font-size:17px;color:#e11d48">3852</span> 公尺</label>
+                <input class="num-sl" type="range" min="3000" max="4000" step="10" value="3852" style="width:100%;margin-top:4px;">
+              </div>
+            </div>
+          `;
 
-          out += `<line x1="60" y1="90" x2="340" y2="90" stroke="#334155" stroke-width="3"/>`;
-          out += `<polygon points="340,85 350,90 340,95" fill="#334155"/>`;
+          const sl = h.querySelector('.num-sl');
+          const numv = h.querySelector('.numv');
+          const estg = h.querySelector('.estg');
 
-          out += `<line x1="80" y1="83" x2="80" y2="97" stroke="#334155" stroke-width="2"/>`;
-          out += TX(80, 118, '3000', { fs: 13, anchor: 'middle' });
+          function render() {
+            const v = +sl.value;
+            numv.textContent = v;
 
-          out += `<line x1="200" y1="85" x2="200" y2="95" stroke="#94a3b8" stroke-width="2"/>`;
-          out += TX(200, 118, '3500', { fs: 12, c: '#64748b', anchor: 'middle' });
+            const minV = 3000, maxV = 4000;
+            const startX = 60, endX = 340, y = 75;
+            const cx = startX + ((v - minV) / (maxV - minV)) * (endX - startX);
+            const nearV = v >= 3500 ? 4000 : 3000;
+            const nearColor = v >= 3500 ? '#059669' : '#2563eb';
 
-          out += `<line x1="320" y1="83" x2="320" y2="97" stroke="#334155" stroke-width="2"/>`;
-          out += TX(320, 118, '4000', { fs: 13, c: GRN, anchor: 'middle' });
+            let out = '';
+            out += TX(200, 26, `數值 ${v} 在數線上的估算（百位為 ${Math.floor((v%1000)/100)}）`, { fs: 13, c: '#0369a1', anchor: 'middle', fw: '900' });
 
-          out += `<circle cx="302" cy="90" r="7" fill="#e11d48"/>`;
-          out += TX(302, 72, '3852', { fs: 13, c: RED, anchor: 'middle' });
+            // 數線主體
+            out += `<line x1="${startX}" y1="${y}" x2="${endX}" y2="${y}" stroke="#334155" stroke-width="3"/>`;
+            out += `<polygon points="${endX},${y-5} ${endX+10},${y} ${endX},${y+5}" fill="#334155"/>`;
 
-          h.innerHTML = svg('0 0 400 170', out);
+            // 刻度
+            out += `<line x1="${startX}" y1="${y-7}" x2="${startX}" y2="${y+7}" stroke="#334155" stroke-width="2"/>`;
+            out += TX(startX, y + 24, '3000', { fs: 12, anchor: 'middle', fw: '900', c: nearV === 3000 ? '#2563eb' : '#64748b' });
+
+            out += `<line x1="200" y1="${y-5}" x2="200" y2="${y+5}" stroke="#94a3b8" stroke-width="2"/>`;
+            out += TX(200, y + 24, '3500', { fs: 11, c: '#64748b', anchor: 'middle' });
+
+            out += `<line x1="${endX}" y1="${y-7}" x2="${endX}" y2="${y+7}" stroke="#334155" stroke-width="2"/>`;
+            out += TX(endX, y + 24, '4000', { fs: 12, anchor: 'middle', fw: '900', c: nearV === 4000 ? '#059669' : '#64748b' });
+
+            // 動態紅點
+            out += `<circle cx="${cx}" cy="${y}" r="6.5" fill="#e11d48"/>`;
+            out += TX(cx, y - 12, `${v}`, { fs: 12.5, c: '#e11d48', anchor: 'middle', fw: '900' });
+
+            // 估算結果卡
+            out += `<rect x="80" y="105" width="240" height="24" rx="6" fill="${nearV === 4000 ? '#dcfce7' : '#dbeafe'}" stroke="${nearColor}" stroke-width="1.2"/>`;
+            out += TX(200, 121, `➔ 靠近 ${nearV}，大約估算為 ${nearV}！`, { fs: 11.5, c: nearColor, anchor: 'middle', fw: '900' });
+
+            estg.innerHTML = out;
+          }
+
+          sl.oninput = render;
+          render();
         },
-        caption: '3852 超過 3500 且非常接近 4000，因此估算大約是 4000（4千）。',
+        caption: '拖動數線滑桿：當百位數大於等於 5（超過 3500）時靠近 4000；反之則靠近 3000！',
         example: {
           q: '一條登山步道全長 3852 公尺，大約是幾千公尺？',
           steps: [
@@ -687,56 +724,73 @@ window.DECK = window.DECK || [];
 
       {
         sec: '2-3', secName: '加減估算與應用驗算',
-        title: '用加減法的互逆關係（和－加數＝被加數）驗算',
+        title: '【互動驗算】運用加減法互逆關係親自挑戰驗算！',
         points: [
-          '<b>加法的驗算</b>：可以用「和 － 加數 ＝ 被加數」。',
-          '<b>減法的驗算</b>：可以用「差 ＋ 減數 ＝ 被減數」。',
-          '點擊按鈕切換，學習如何驗算自己的答案。'
+          '<b>加法的驗算</b>：用「和 － 加數 ＝ 被加數」。',
+          '<b>減法的驗算</b>：用「差 ＋ 減數 ＝ 被減數」。',
+          '點擊下方題目，選出正確的驗算算式吧！'
         ],
         visual: (h) => {
-          h.innerHTML = `<div style="width:100%;text-align:center;padding:4px">
-            <div class="ckg"></div>
-            <div class="ictrl" style="margin-top:8px">
-              <button class="btn-add-ck dbtn active" style="padding:4px 12px;margin-right:8px">加法驗算示範</button>
-              <button class="btn-sub-ck dbtn" style="padding:4px 12px">減法驗算示範</button>
+          h.innerHTML = `
+            <div style="width:100%;text-align:center;font-family:sans-serif;padding:4px;">
+              <div id="ckQuizStage" style="background:#f8fafc;border:1px solid #cbd5e1;border-radius:12px;padding:12px;min-height:150px;"></div>
+              <div style="display:flex;justify-content:center;gap:8px;margin-top:8px;">
+                <button class="cktab active" data-m="add" style="padding:4px 12px;border-radius:6px;border:1px solid #2563eb;background:#2563eb;color:#fff;font-weight:800;font-size:12px;cursor:pointer;">加法題：1323 + 1699 = 3022</button>
+                <button class="cktab" data-m="sub" style="padding:4px 12px;border-radius:6px;border:1.5px solid #cbd5e1;background:#fff;color:#334155;font-weight:800;font-size:12px;cursor:pointer;">減法題：3000 - 2184 = 816</button>
+              </div>
             </div>
-          </div>`;
+          `;
 
-          let mode = 'add';
-          const update = () => {
-            let out = BOX(30, 15, 340, 140, { fill: mode === 'add' ? '#f5f3ff' : '#f0fdf4', stroke: mode === 'add' ? VIO : GRN });
-            if (mode === 'add') {
-              out += TX(200, 42, '加法驗算：1323 ＋ 1699 ＝ 3022', { fs: 14, c: VIO, anchor: 'middle' });
-              out += BOX(50, 60, 140, 75, { fill: '#fff', stroke: '#ddd' });
-              out += TX(120, 80, '【計算算式】', { fs: 11, c: '#64748b', anchor: 'middle' });
-              out += TX(120, 105, '1323 ＋ 1699 ＝ 3022', { fs: 12, c: VIO, anchor: 'middle' });
+          let currMode = 'add';
+          const stage = h.querySelector('#ckQuizStage');
+          const tabs = h.querySelectorAll('.cktab');
 
-              out += TX(200, 98, '➔ 驗算', { fs: 14, c: RED, anchor: 'middle' });
+          function renderQuiz() {
+            const isAdd = currMode === 'add';
+            const titleStr = isAdd ? '1323 ＋ 1699 ＝ 3022' : '3000 － 2184 ＝ 816';
+            const opts = isAdd
+              ? [{ text: '3022 － 1699 ＝ 1323', ok: true }, { text: '1323 ＋ 3022 ＝ 4345', ok: false }]
+              : [{ text: '816 ＋ 2184 ＝ 3000', ok: true }, { text: '3000 ＋ 816 ＝ 3816', ok: false }];
 
-              out += BOX(210, 60, 140, 75, { fill: '#fff', stroke: '#ddd' });
-              out += TX(280, 80, '【用減法驗算】', { fs: 11, c: '#64748b', anchor: 'middle' });
-              out += TX(280, 105, '3022 － 1699 ＝ 1323', { fs: 12, c: GRN, anchor: 'middle' });
-            } else {
-              out += TX(200, 42, '減法驗算：3000 － 2184 ＝ 816', { fs: 14, c: GRN, anchor: 'middle' });
-              out += BOX(50, 60, 140, 75, { fill: '#fff', stroke: '#ddd' });
-              out += TX(120, 80, '【原計算算式】', { fs: 11, c: '#64748b', anchor: 'middle' });
-              out += TX(120, 105, '3000 － 2184 ＝ 816', { fs: 12, c: RED, anchor: 'middle' });
+            let out = `
+              <div style="font-size:15px;font-weight:900;color:#0f172a;margin-bottom:8px;">
+                要驗算算式 <span style="color:#2563eb;">${titleStr}</span>，哪一個才是正確的驗算算式？
+              </div>
+              <div style="display:flex;gap:10px;justify-content:center;margin:10px 0;">
+            `;
+            opts.forEach((o, i) => {
+              out += `<button class="ck-opt" data-ok="${o.ok}" style="padding:8px 14px;border-radius:8px;border:1.5px solid #cbd5e1;background:#fff;font-size:13.5px;font-weight:800;color:#334155;cursor:pointer;">${o.text}</button>`;
+            });
+            out += `</div><div id="ckFeedback" style="min-height:36px;"></div>`;
+            stage.innerHTML = out;
 
-              out += TX(200, 98, '➔ 驗算', { fs: 14, c: BLU, anchor: 'middle' });
+            const optBtns = stage.querySelectorAll('.ck-opt');
+            const fb = stage.querySelector('#ckFeedback');
 
-              out += BOX(210, 60, 140, 75, { fill: '#fff', stroke: '#ddd' });
-              out += TX(280, 80, '【用加法驗算】', { fs: 11, c: '#64748b', anchor: 'middle' });
-              out += TX(280, 105, '816 ＋ 2184 ＝ 3000', { fs: 12, c: VIO, anchor: 'middle' });
-            }
+            optBtns.forEach(btn => {
+              btn.onclick = () => {
+                const ok = btn.getAttribute('data-ok') === 'true';
+                if (ok) {
+                  btn.style.background = '#dcfce7'; btn.style.borderColor = '#059669'; btn.style.color = '#047857';
+                  fb.innerHTML = `<div style="background:#f0fdf4;border:1.5px solid #059669;border-radius:8px;padding:6px;color:#047857;font-weight:900;font-size:13px;">🎉 答對了！ ${isAdd ? '加法用減法驗算（和 - 加數 = 被加數）' : '減法用加法驗算（差 + 減數 = 被減數）'}</div>`;
+                } else {
+                  btn.style.background = '#fee2e2'; btn.style.borderColor = '#ef4444'; btn.style.color = '#991b1b';
+                  fb.innerHTML = `<div style="background:#fff1f2;border:1.5px solid #ef4444;border-radius:8px;padding:6px;color:#991b1b;font-weight:900;font-size:13px;">❌ 答錯囉！請用互逆關係（加變減、減變加）來驗算！</div>`;
+                }
+              };
+            });
+          }
 
-            h.querySelector('.ckg').innerHTML = svg('0 0 400 170', out);
-          };
+          tabs.forEach(tab => {
+            tab.onclick = () => {
+              tabs.forEach(t => { t.style.background = '#fff'; t.style.color = '#334155'; t.style.borderColor = '#cbd5e1'; });
+              tab.style.background = '#2563eb'; tab.style.color = '#fff'; tab.style.borderColor = '#2563eb';
+              currMode = tab.getAttribute('data-m');
+              renderQuiz();
+            };
+          });
 
-          const bAdd = h.querySelector('.btn-add-ck');
-          const bSub = h.querySelector('.btn-sub-ck');
-          bAdd.onclick = () => { mode = 'add'; update(); };
-          bSub.onclick = () => { mode = 'sub'; update(); };
-          update();
+          renderQuiz();
         },
         caption: '算完題目後，透過加減互逆關係驗算，能確保計算 100% 正確。',
         example: {

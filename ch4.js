@@ -152,16 +152,15 @@ window.DECK = window.DECK || [];
             s += `<div style="background:#fff; border:1px solid #e11d48; padding:6px 12px; border-radius:8px;">2️⃣ 補末尾 ${type === 10 ? '1' : '2'} 個 0 ➔ <b style="color:#e11d48; font-size:15px;">${finalProd}</b></div>`;
             s += `</div>`;
 
-            // 視覺圖示 (被乘數的陣列)
+            // 視覺圖示 (被乘數的陣列：全動態按比例縮放 1~9 組)
             let svgStr = '';
-            const boxCount = Math.min(k, 6);
-            for (let b = 0; b < boxCount; b++) {
-              const bx = 20 + b * 60;
-              svgStr += `<rect x="${bx}" y="10" width="52" height="36" rx="6" fill="#fef3c7" stroke="#f59e0b" stroke-width="1.5"/>`;
-              svgStr += `<text x="${bx + 26}" y="32" text-anchor="middle" font-size="12" font-weight="900" fill="#b45309">${num}</text>`;
-            }
-            if (k > 6) {
-              svgStr += `<text x="${20 + 6 * 60}" y="32" font-size="14" font-weight="900" fill="#d97706">... 共 ${k} 組</text>`;
+            const maxW = 360;
+            const bw = Math.min(52, Math.floor((maxW - (k - 1) * 5) / k));
+            const startX = Math.round((400 - (k * bw + (k - 1) * 5)) / 2);
+            for (let b = 0; b < k; b++) {
+              const bx = startX + b * (bw + 5);
+              svgStr += `<rect x="${bx}" y="10" width="${bw}" height="36" rx="6" fill="#fef3c7" stroke="#f59e0b" stroke-width="1.5"/>`;
+              svgStr += `<text x="${bx + bw / 2}" y="32" text-anchor="middle" font-size="${bw < 38 ? 9.5 : 12}" font-weight="900" fill="#b45309">${num}</text>`;
             }
 
             s += `<div style="margin-top:10px;">${svg('0 0 400 55', svgStr)}</div>`;
@@ -800,6 +799,22 @@ window.DECK = window.DECK || [];
             s += `估算與精確值相差僅 <span style="color:#e11d48;">${diff}</span> 元，估算非常便利實用！`;
             s += `</div>`;
 
+            // 數線視覺化（精確值 vs 估算值）
+            const minVal = Math.min(exactTotal, estTotal) - 20;
+            const maxVal = Math.max(exactTotal, estTotal) + 20;
+            const lineW = 340, startX = 30, lineY = 25;
+            const exactX = startX + ((exactTotal - minVal) / (maxVal - minVal)) * lineW;
+            const estX = startX + ((estTotal - minVal) / (maxVal - minVal)) * lineW;
+
+            let numLineSvg = `<svg viewBox="0 0 400 45" style="max-width:100%;margin-top:6px;">`;
+            numLineSvg += `<line x1="${startX}" y1="${lineY}" x2="${startX + lineW}" y2="${lineY}" stroke="#94a3b8" stroke-width="2"/>`;
+            numLineSvg += `<circle cx="${exactX}" cy="${lineY}" r="5" fill="#059669"/>`;
+            numLineSvg += `<text x="${exactX}" y="${lineY - 8}" text-anchor="middle" font-size="11" font-weight="900" fill="#059669">精確 ${exactTotal}元</text>`;
+            numLineSvg += `<circle cx="${estX}" cy="${lineY}" r="5" fill="#d97706"/>`;
+            numLineSvg += `<text x="${estX}" y="${lineY + 16}" text-anchor="middle" font-size="11" font-weight="900" fill="#d97706">估算 ${estTotal}元</text>`;
+            numLineSvg += `</svg>`;
+
+            s += numLineSvg;
             stage.innerHTML = s;
           }
 

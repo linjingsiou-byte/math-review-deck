@@ -205,10 +205,10 @@ window.DECK = window.DECK || [];
                 <div style="font-size:13.5px; font-weight:900; color:#047857;">
                   已鋪滿：<span id="filledCount" style="color:#e11d48; font-size:18px;">0</span> / <span id="totalCells">12</span> cm²
                 </div>
-                <div style="display:flex; gap:6px;">
                   <button class="ashape-btn active" data-type="rect" style="padding:4px 8px; border-radius:6px; border:1px solid #059669; background:#059669; color:#fff; font-weight:800; font-size:12px; cursor:pointer;">長方形 (4x3)</button>
                   <button class="ashape-btn" data-type="square" style="padding:4px 8px; border-radius:6px; border:1px solid #cbd5e1; background:#fff; color:#334155; font-weight:800; font-size:12px; cursor:pointer;">正方形 (3x3)</button>
-                  <button class="ashape-btn" data-type="lshape" style="padding:4px 8px; border-radius:6px; border:1px solid #cbd5e1; background:#fff; color:#334155; font-weight:800; font-size:12px; cursor:pointer;">L 型多邊形</button>
+                  <button class="ashape-btn" data-type="L-shape" style="padding:4px 8px; border-radius:6px; border:1px solid #cbd5e1; background:#fff; color:#334155; font-weight:800; font-size:12px; cursor:pointer;">L 型多邊形</button>
+                  <button class="ashape-btn" data-type="tri" style="padding:4px 8px; border-radius:6px; border:1px solid #cbd5e1; background:#fff; color:#334155; font-weight:800; font-size:12px; cursor:pointer;">📐 含半格三角形 (5cm²)</button>
                 </div>
               </div>
 
@@ -240,11 +240,16 @@ window.DECK = window.DECK || [];
               for (let r = 0; r < 3; r++) { for (let c = 0; c < 4; c++) cells.push({ r, c }); }
             } else if (shapeType === 'square') {
               for (let r = 0; r < 3; r++) { for (let c = 0; c < 3; c++) cells.push({ r, c }); }
-            } else {
+            } else if (shapeType === 'L-shape') {
               for (let r = 0; r < 4; r++) cells.push({ r, c: 0 });
               for (let r = 0; r < 4; r++) cells.push({ r, c: 1 });
               cells.push({ r: 3, c: 2 });
               cells.push({ r: 3, c: 3 });
+            } else {
+              // 含有 2 個半格 (三角形) 的複合圖形：4 個整格 + 2 個半格 (= 5 cm²)
+              for (let r = 0; r < 2; r++) { for (let c = 0; c < 2; c++) cells.push({ r, c, isHalf: false }); }
+              cells.push({ r: 2, c: 0, isHalf: true, dir: 'TL' });
+              cells.push({ r: 2, c: 1, isHalf: true, dir: 'TR' });
             }
             return cells;
           }

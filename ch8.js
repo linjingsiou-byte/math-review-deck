@@ -38,27 +38,61 @@ window.DECK = window.DECK || [];
         ],
         formula: { label: '容量核心關係', tex: '1\\text{ L} = 1000\\text{ mL}' },
         visual: (h) => {
-          let out = '';
-          out += BOX(15, 15, 390, 110, { fill: '#faf5ff', stroke: VIO, r: 12 });
-          out += TX(210, 40, '🧪 1000 mL ＝ 1 L 容量基準', { fs: 16, c: VIO, anchor: 'middle', fw: '900' });
+          h.innerHTML = `
+            <div style="width:100%; font-family:sans-serif; text-align:center;">
+              <div style="background:#faf5ff; border:1.5px solid #7c3aed; border-radius:12px; padding:10px; margin-bottom:10px;">
+                <div style="font-size:14px; font-weight:900; color:#6b21a8;">🧪 1000 mL ＝ 1 L 容量核心關係</div>
+                <div style="display:flex; justify-content:center; gap:16px; margin-top:6px; font-size:13px; font-weight:800;">
+                  <span style="background:#fff; border:1px solid #c084fc; padding:4px 10px; border-radius:6px; color:#7c3aed;">眼藥水 1 滴 ≒ 1 mL</span>
+                  <span style="background:#fff; border:1px solid #e11d48; padding:4px 10px; border-radius:6px; color:#e11d48;">1 L ＝ 1000 mL</span>
+                </div>
+              </div>
 
-          out += BOX(35, 55, 160, 55, { fill: '#fff', stroke: '#c084fc', r: 8 });
-          out += TX(115, 76, '1 毫升 (mL)', { fs: 13, c: VIO, anchor: 'middle', fw: '900' });
-          out += TX(115, 96, '眼藥水滴管 1 滴約 1 mL', { fs: 11, c: '#64748b', anchor: 'middle' });
+              <div id="itemDetailStage" style="background:#eff6ff; border:1.5px solid #2563eb; border-radius:12px; padding:10px; min-height:85px; margin-bottom:8px;">
+                <!-- 容器詳情由 JS 渲染 -->
+              </div>
 
-          out += BOX(225, 55, 160, 55, { fill: '#fff', stroke: '#c084fc', r: 8 });
-          out += TX(305, 76, '1 公升 (L)', { fs: 13, c: VIO, anchor: 'middle', fw: '900' });
-          out += TX(305, 96, '＝ 1000 毫升 (mL)', { fs: 12, c: RED, anchor: 'middle', fw: '900' });
+              <div style="display:flex; gap:6px; justify-content:center; flex-wrap:wrap;">
+                <button class="cnt-btn active" data-ml="100" data-name="養樂多" data-icon="🥤" style="padding:4px 8px; border-radius:6px; border:1px solid #2563eb; background:#2563eb; color:#fff; font-weight:800; font-size:12px; cursor:pointer;">🥤 養樂多</button>
+                <button class="cnt-btn" data-ml="250" data-name="鋁箔包" data-icon="🧃" style="padding:4px 8px; border-radius:6px; border:1px solid #cbd5e1; background:#fff; color:#334155; font-weight:800; font-size:12px; cursor:pointer;">🧃 鋁箔包</button>
+                <button class="cnt-btn" data-ml="600" data-name="寶特瓶" data-icon="🍾" style="padding:4px 8px; border-radius:6px; border:1px solid #cbd5e1; background:#fff; color:#334155; font-weight:800; font-size:12px; cursor:pointer;">🍾 寶特瓶</button>
+                <button class="cnt-btn" data-ml="1000" data-name="鮮奶壺" data-icon="🥛" style="padding:4px 8px; border-radius:6px; border:1px solid #cbd5e1; background:#fff; color:#334155; font-weight:800; font-size:12px; cursor:pointer;">🥛 鮮奶壺</button>
+                <button class="cnt-btn" data-ml="5000" data-name="大水桶" data-icon="🪣" style="padding:4px 8px; border-radius:6px; border:1px solid #cbd5e1; background:#fff; color:#334155; font-weight:800; font-size:12px; cursor:pointer;">🪣 大水桶</button>
+              </div>
+            </div>
+          `;
 
-          out += BOX(15, 140, 390, 105, { fill: '#eff6ff', stroke: BLU, r: 12 });
-          out += TX(210, 165, '🥤 生活常見容器容量感度圖解', { fs: 14, c: BLU, anchor: 'middle', fw: '900' });
+          const btns = h.querySelectorAll('.cnt-btn');
+          const detailStage = h.querySelector('#itemDetailStage');
 
-          out += TX(35, 192, '• 養樂多 ≒ 100 mL', { fs: 13, c: '#1e3a8a', fw: '800' });
-          out += TX(200, 192, '• 鋁箔包飲料 ≒ 250 mL', { fs: 13, c: '#1e3a8a', fw: '800' });
-          out += TX(35, 218, '• 運動飲料寶特瓶 ≒ 600 mL', { fs: 13, c: '#1e3a8a', fw: '800' });
-          out += TX(200, 218, '• 家庭大鮮奶 ≒ 2 L (2000 mL)', { fs: 13, c: RED, fw: '900' });
+          function renderDetail(ml, name, icon) {
+            const l = Math.floor(ml / 1000);
+            const rem = ml % 1000;
+            const lStr = l > 0 ? `${l} L ${rem > 0 ? rem + ' mL' : ''}` : `${ml} mL`;
 
-          h.innerHTML = svg('0 0 420 260', out);
+            let out = `
+              <div style="font-size:16px; font-weight:900; color:#1e3a8a;">
+                ${icon} <span style="color:#2563eb;">${name}</span> 容量大約是 <span style="color:#e11d48; font-size:20px;">${ml} mL</span>
+              </div>
+              <div style="margin-top:6px; font-size:13.5px; font-weight:800; color:#0369a1;">
+                公升毫示換算：<span style="background:#fff; border:1px solid #0284c7; padding:2px 8px; border-radius:6px; color:#0284c7;">${ml} mL ＝ ${lStr}</span>
+              </div>
+            `;
+            detailStage.innerHTML = out;
+          }
+
+          btns.forEach(b => {
+            b.onclick = () => {
+              btns.forEach(btn => { btn.style.background = '#fff'; btn.style.color = '#334155'; btn.style.borderColor = '#cbd5e1'; });
+              b.style.background = '#2563eb'; b.style.color = '#fff'; b.style.borderColor = '#2563eb';
+              const ml = +b.getAttribute('data-ml');
+              const name = b.getAttribute('data-name');
+              const icon = b.getAttribute('data-icon');
+              renderDetail(ml, name, icon);
+            };
+          });
+
+          renderDetail(100, '養樂多', '🥤');
         },
         caption: '1 公升相當於 1000 個 1 毫升，測量大容器使用公升，小容器使用毫升。',
         example: {
