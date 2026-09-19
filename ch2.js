@@ -309,13 +309,13 @@ window.DECK = window.DECK || [];
 
       {
         sec: '2-1', secName: '四位數的加法',
-        title: '逢十就進位，注意千位進位到萬位',
+        title: '逢十就進位，連續進位過渡概念',
         points: [
-          '當千位相加滿 10 時，會進位到 <span class="k">萬位</span>。',
-          '例如：\\(626 + 4374 = 5000\\)，或 \\(1323 + 1699 = 3022\\)。',
+          '當某一位數相加滿 10 時，向左邊高一位 <span class="k">進位 1</span>。',
+          '例如：\\(626 + 4374 = 5000\\)，個、十、百位連續進位後得 5000。',
           '位數不同的加法（如三位數＋四位數）<b>個位務必對齊</b>。'
         ],
-        formula: { label: '進位到萬位', tex: '626 + 4374 = 5000' },
+        formula: { label: '連續進位過渡', tex: '626 + 4374 = 5000' },
         visual: (h) => {
           let out = BOX(40, 15, 320, 150, { fill: '#f0fdf4', stroke: GRN });
           out += TX(200, 38, '626 ＋ 4374 ＝ 5000 的進位過渡', { fs: 15, c: GRN, anchor: 'middle' });
@@ -327,7 +327,7 @@ window.DECK = window.DECK || [];
           out += TX(cols[4], 60, '十', { fs: 12, c: '#64748b', anchor: 'middle' });
           out += TX(cols[5], 60, '個', { fs: 12, c: '#64748b', anchor: 'middle' });
 
-          out += TX(cols[1], 76, '1', { fs: 12, c: RED, anchor: 'middle' });
+          // 進位標記 (個位 6+4=10 進1到十位、十位 2+7+1=10 進1到百位、百位 6+3+1=10 進1到千位；千位 4+1=5 不必進位到萬位)
           out += TX(cols[2], 76, '1', { fs: 12, c: RED, anchor: 'middle' });
           out += TX(cols[3], 76, '1', { fs: 12, c: RED, anchor: 'middle' });
           out += TX(cols[4], 76, '1', { fs: 12, c: RED, anchor: 'middle' });
