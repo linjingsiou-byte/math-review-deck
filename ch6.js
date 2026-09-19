@@ -256,8 +256,16 @@ window.DECK = window.DECK || [];
 
           function renderGrid() {
             const cells = getShapeCells();
-            totalLabel.textContent = cells.length;
-            filledLabel.textContent = filledCount;
+            const totalArea = cells.reduce((sum, c) => sum + (c.isHalf ? 0.5 : 1), 0);
+            
+            // 計算目前已被鋪滿的累積面積
+            let currentFilledArea = 0;
+            for (let i = 0; i < filledCount && i < cells.length; i++) {
+              currentFilledArea += cells[i].isHalf ? 0.5 : 1;
+            }
+
+            totalLabel.textContent = totalArea;
+            filledLabel.textContent = currentFilledArea;
 
             const gridUnit = 28;
             const startX = 30, startY = 15;
@@ -275,13 +283,37 @@ window.DECK = window.DECK || [];
               const cx = startX + cell.c * gridUnit;
               const cy = startY + cell.r * gridUnit;
               const isFilled = idx < filledCount;
+              const fillColor = isFilled ? 'rgba(5, 150, 105, 0.45)' : '#f8fafc';
+              const strokeColor = isFilled ? '#059669' : '#94a3b8';
+              const sw = isFilled ? '2' : '1.2';
 
               s += `<g cursor="pointer" class="cell-g" data-idx="${idx}">`;
-              s += `<rect x="${cx}" y="${cy}" width="${gridUnit}" height="${gridUnit}" fill="${isFilled ? 'rgba(5, 150, 105, 0.4)' : '#f8fafc'}" stroke="${isFilled ? '#059669' : '#94a3b8'}" stroke-width="${isFilled ? '2' : '1.2'}"/>`;
-              if (isFilled) {
-                s += `<text x="${cx + gridUnit / 2}" y="${cy + gridUnit / 2 + 4}" text-anchor="middle" font-size="11" font-weight="900" fill="#047857">${idx + 1}</text>`;
+
+              if (cell.isHalf) {
+                // 畫半格對角三角形 (0.5 cm²)
+                let pts = '';
+                if (cell.dir === 'TL') {
+                  pts = `${cx},${cy} ${cx + gridUnit},${cy} ${cx},${cy + gridUnit}`;
+                } else {
+                  pts = `${cx},${cy} ${cx + gridUnit},${cy} ${cx + gridUnit},${cy + gridUnit}`;
+                }
+                s += `<polygon points="${pts}" fill="${fillColor}" stroke="${strokeColor}" stroke-width="${sw}"/>`;
+                
+                const tx = cell.dir === 'TL' ? cx + gridUnit * 0.35 : cx + gridUnit * 0.65;
+                const ty = cy + gridUnit * 0.45;
+                if (isFilled) {
+                  s += `<text x="${tx}" y="${ty}" text-anchor="middle" font-size="9.5" font-weight="900" fill="#047857">0.5</text>`;
+                } else {
+                  s += `<text x="${tx}" y="${ty}" text-anchor="middle" font-size="8.5" font-weight="700" fill="#94a3b8">+0.5</text>`;
+                }
               } else {
-                s += `<text x="${cx + gridUnit / 2}" y="${cy + gridUnit / 2 + 4}" text-anchor="middle" font-size="9" font-weight="700" fill="#94a3b8">+1</text>`;
+                // 畫正方形完整格 (1 cm²)
+                s += `<rect x="${cx}" y="${cy}" width="${gridUnit}" height="${gridUnit}" fill="${fillColor}" stroke="${strokeColor}" stroke-width="${sw}"/>`;
+                if (isFilled) {
+                  s += `<text x="${cx + gridUnit / 2}" y="${cy + gridUnit / 2 + 4}" text-anchor="middle" font-size="11" font-weight="900" fill="#047857">${idx + 1}</text>`;
+                } else {
+                  s += `<text x="${cx + gridUnit / 2}" y="${cy + gridUnit / 2 + 4}" text-anchor="middle" font-size="9" font-weight="700" fill="#94a3b8">+1</text>`;
+                }
               }
               s += `</g>`;
             });
@@ -292,10 +324,10 @@ window.DECK = window.DECK || [];
             s += `<text x="17.5" y="22" text-anchor="middle" font-size="11" font-weight="900" fill="#e11d48">1cm²</text>`;
             s += `<text x="17.5" y="50" text-anchor="middle" font-size="11" font-weight="800" fill="#334155">1平方公分</text>`;
 
-            if (filledCount === cells.length) {
+            if (currentFilledArea === totalArea) {
               s += `<rect x="-10" y="70" width="70" height="42" fill="#ecfdf5" stroke="#059669" stroke-width="2" rx="8"/>`;
               s += `<text x="25" y="88" text-anchor="middle" font-size="11" font-weight="900" fill="#059669">🎉 成功鋪滿</text>`;
-              s += `<text x="25" y="104" text-anchor="middle" font-size="12" font-weight="900" fill="#e11d48">${cells.length} cm²！</text>`;
+              s += `<text x="25" y="104" text-anchor="middle" font-size="12" font-weight="900" fill="#e11d48">${totalArea} cm²！</text>`;
             }
             s += `</g>`;
 
