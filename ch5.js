@@ -265,7 +265,7 @@ window.DECK = window.DECK || [];
             if (deg === 90) {
               typeText.textContent = '直角 (Right Angle)';
               typeText.style.color = '#059669';
-              tipText = '一邊恰好與三角板直角邊重合 ➔ 直角 (90°) └┐';
+              tipText = '一邊恰好與三角板直角邊重合 ➔ 直角 (90°)';
             } else if (deg < 90) {
               typeText.textContent = '比直角小 (銳角)';
               typeText.style.color = '#2563eb';
@@ -305,7 +305,7 @@ window.DECK = window.DECK || [];
             // 4. 角度標示
             if (deg === 90) {
               s += `<rect x="${vx}" y="${vy - 20}" width="20" height="20" fill="rgba(5, 150, 105, 0.2)" stroke="#059669" stroke-width="2"/>`;
-              s += `<text x="${vx + 28}" y="${vy - 28}" font-size="13" font-weight="900" fill="#059669">直角 └┐</text>`;
+              s += `<text x="${vx + 28}" y="${vy - 28}" font-size="13" font-weight="900" fill="#059669">直角 (90°)</text>`;
             } else {
               const arcR = 35;
               const ax2 = vx + arcR * Math.cos(-rad);
@@ -382,7 +382,7 @@ window.DECK = window.DECK || [];
           out += `<rect x="${sx}" y="${sy + sw - 12}" width="12" height="12" fill="none" stroke="${RED}" stroke-width="1.6"/>`;
           out += `<rect x="${sx + sw - 12}" y="${sy + sw - 12}" width="12" height="12" fill="none" stroke="${RED}" stroke-width="1.6"/>`;
 
-          out += TX(72.5, 175, '4 個直角 └┐', { fs: 11.5, c: RED, anchor: 'middle', fw: '900' });
+          out += TX(72.5, 175, '4 個直角', { fs: 11.5, c: RED, anchor: 'middle', fw: '900' });
           out += TX(72.5, 195, '4 條邊等長', { fs: 11.5, c: CYN, anchor: 'middle', fw: '800' });
 
           // 2. 長方形
@@ -397,7 +397,7 @@ window.DECK = window.DECK || [];
           out += `<rect x="${rx}" y="${ry + rh - 12}" width="12" height="12" fill="none" stroke="${RED}" stroke-width="1.6"/>`;
           out += `<rect x="${rx + rw - 12}" y="${ry + rh - 12}" width="12" height="12" fill="none" stroke="${RED}" stroke-width="1.6"/>`;
 
-          out += TX(210, 175, '4 個直角 └┐', { fs: 11.5, c: RED, anchor: 'middle', fw: '900' });
+          out += TX(210, 175, '4 個直角', { fs: 11.5, c: RED, anchor: 'middle', fw: '900' });
           out += TX(210, 195, '對邊相等', { fs: 11.5, c: BLU, anchor: 'middle', fw: '800' });
 
           // 3. 菱形對比 (迷思破解)
