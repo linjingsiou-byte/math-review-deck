@@ -181,7 +181,7 @@ window.DECK = window.DECK || [];
         ],
         visual: (h) => {
           h.innerHTML = `<div style="width:100%;text-align:center;padding:2px">
-            <div style="display:flex;justify-content:center;gap:6px;margin-bottom:8px;flex-wrap:nowrap;align-items:center">
+            <div style="display:flex;justify-content:center;gap:6px;margin-bottom:8px;flex-wrap:wrap;align-items:center">
               <button class="play-btn btn-play">▶️ 播放動畫</button>
               <button class="step-btn btn-0 active">Step 1: 原圖(135+247)</button>
               <button class="step-btn btn-1">Step 2: 🟡 圈選10個</button>
@@ -232,19 +232,18 @@ window.DECK = window.DECK || [];
 
             // 標示十格條數量標籤
             if (step === 0 || step === 1) {
-              out += TX(125, 142, '十位：上3條＋下4條 ＝ 7條(70)', { fs: 10, c: VIO, anchor: 'middle', fw: '900' });
+              out += TX(125, 144, '十位：上3條＋下4條＝7條', { fs: 9.5, c: VIO, anchor: 'middle', fw: '900' });
             } else if (step === 2) {
-              out += TX(125, 142, '十位：3條＋4條＋1條進位 ＝ 8條(80)', { fs: 10, c: AMB, anchor: 'middle', fw: '900' });
+              out += TX(125, 144, '十位：3條＋4條＋1進位＝8條', { fs: 9.5, c: AMB, anchor: 'middle', fw: '900' });
             }
 
             // 3. 個位小方塊 (135 有 5 個 排第1排; 247 有 7 個 排第2排[5個]與第3排[2個])
-            for (let i = 0; i < 5; i++) out += drawUnitCube(162 + i * 15, 48);
-
             if (step === 0 || step === 1) {
+              for (let i = 0; i < 5; i++) out += drawUnitCube(162 + i * 15, 48);
               for (let i = 0; i < 5; i++) out += drawUnitCube(162 + i * 15, 66);
               for (let i = 0; i < 2; i++) out += drawUnitCube(162 + i * 15, 88);
             } else if (step === 2) {
-              // 步驟 2: 10 個方塊換走，只留下第 3 排 2 個！
+              // 步驟 3: 10 個小方塊換成 1 條進位到十位，個位只留下第 3 排 2 個！
               for (let i = 0; i < 2; i++) out += drawUnitCube(162 + i * 15, 88);
             }
 
@@ -427,7 +426,7 @@ window.DECK = window.DECK || [];
         ],
         visual: (h) => {
           h.innerHTML = `<div style="width:100%;text-align:center;padding:2px">
-            <div style="display:flex;justify-content:center;gap:6px;margin-bottom:8px;flex-wrap:nowrap;align-items:center">
+            <div style="display:flex;justify-content:center;gap:6px;margin-bottom:8px;flex-wrap:wrap;align-items:center">
               <button class="play-btn btn-play">▶️ 播放動畫</button>
               <button class="step-btn btn-0 active">Step 1: 原圖(300)</button>
               <button class="step-btn btn-1">Step 2: ✂️ 拆1百格板到十位</button>
