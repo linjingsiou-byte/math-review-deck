@@ -180,7 +180,7 @@ window.DECK = window.DECK || [];
 
               <div style="display:flex; gap:8px; margin-top:8px; flex-wrap:wrap;">
                 <button id="pourBtn" style="flex:1; padding:6px; border-radius:8px; border:1.5px solid #7c3aed; background:#eff6ff; color:#7c3aed; font-weight:900; font-size:13px; cursor:pointer;">💧 注入 250 mL</button>
-                <button id="pourAllBtn" style="padding:6px 10px; border-radius:8px; border:1.5px solid #7c3aed; background:#fff; color:#7c3aed; font-weight:800; font-size:12px; cursor:pointer;">渴满 (1000mL)</button>
+                <button id="pourAllBtn" style="padding:6px 10px; border-radius:8px; border:1.5px solid #7c3aed; background:#fff; color:#7c3aed; font-weight:800; font-size:12px; cursor:pointer;">倒滿 (1000mL)</button>
                 <button id="pourResetBtn" style="padding:6px 10px; border-radius:8px; border:1.5px solid #cbd5e1; background:#fff; color:#64748b; font-weight:800; font-size:12px; cursor:pointer;">↺ 清空</button>
                 <button id="milkBtn" style="padding:6px 12px; border-radius:8px; border:2px solid #e11d48; background:#fff1f2; color:#e11d48; font-weight:900; font-size:13px; cursor:pointer; display:none;">🪴 倒入 1L 鮮奶壺！</button>
               </div>
