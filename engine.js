@@ -108,37 +108,53 @@
     typeset(document.getElementById('zoomBody'));
   }
   // 放大層：把 host 內容等比放大到填滿整頁
-  // 繪圖 SVG 有 viewBox，寬度撐滿就會連同裡面的字一起放大，不必特別處理；
-  // 但「重點整理／易錯對照」這類 HTML 內容（fbox 公式卡、表格）字級是固定 px，
-  // 框會被撐大、字卻還是原來大小 → 必須用 transform 等比放大整塊。
   function fitZoomHost() {
     const host = zoomHost;
     if (!host) return;
     const body = document.getElementById('zoomBody');
-    if (!body) return;
-    const isDrawing = !!host.querySelector('svg:not(mjx-container svg)');
-    if (isDrawing) { host.style.width = ''; host.style.transform = 'none'; return; }
-    // 以「原本在投影片視覺欄的寬度」當基準寬度，再整塊等比放大，維持原有版面比例
-    const baseW = +host.dataset.zoomBase || 460;
-    host.style.width = baseW + 'px';
-    host.style.margin = '0 auto';
-    host.style.transformOrigin = 'top center';
+    const modal = document.getElementById('zoomModal');
+    if (!body || !modal) return;
+
+    // 重置縮放與尺寸，以便精準量測自然內容高與寬
     host.style.transform = 'none';
-    // .zoom-body > .visual-host 預設 flex:1 會撐滿整個放大層高度，
-    // 那樣量到的是「容器高」而不是「內容自然高」，算出來的倍率永遠是 1；
-    // 先解除彈性伸展改為 height:auto，才量得到真正需要的高度。
+    host.style.transformOrigin = 'top center';
+    host.style.margin = '0 auto';
     host.style.flex = 'none';
     host.style.height = 'auto';
+
+    // 取得基準寬度：優先使用 zoomBase (原視覺欄寬度)，量不到則預設 460
+    const baseW = +host.dataset.zoomBase || 460;
+    host.style.width = baseW + 'px';
+
+    // 量測 MathJax 排版與 HTML 渲染後的自然高度
     const needH = host.scrollHeight;
     if (!needH) return;
-    const k = Math.max(1, Math.min(body.clientWidth / baseW, body.clientHeight / needH, 3.4));
-    host.style.transform = 'scale(' + k.toFixed(4) + ')';
+
+    // 計算模組內部的實際可用寬高 (扣除 modal padding)
+    const comp = window.getComputedStyle(modal);
+    const padX = (parseFloat(comp.paddingLeft) || 20) + (parseFloat(comp.paddingRight) || 20);
+    const padY = (parseFloat(comp.paddingTop) || 82) + (parseFloat(comp.paddingBottom) || 56);
+
+    const availW = Math.max(260, modal.clientWidth - padX);
+    const availH = Math.max(200, modal.clientHeight - padY);
+
+    // 計算等比縮放倍率 k：
+    // 支援滿版與窄螢幕 (如手機) 動態向下縮放 (k < 1.0)，防止水平爆版與出現橫向滾動條；
+    // 上限設為 2.8 倍，讓寬螢幕時教學圖解與互動教具放大清晰呈現。
+    let k = Math.min(availW / baseW, availH / needH, 2.8);
+    k = Math.max(0.35, k);
+
+    host.style.transform = `scale(${k.toFixed(4)})`;
+
+    // 設定 body 的最小高度，確保垂直居中與滑動視差
+    body.style.minHeight = Math.round(needH * k) + 'px';
   }
   function openVisualModal(s, host) {
     ensureZoom();
     document.getElementById('zoomSol').style.display = 'none';   // 圖解不需要「顯示解答」
     const body = document.getElementById('zoomBody');
     body.innerHTML = '';
+    body.style.minHeight = '';
     zoomHost = host; zoomHostParent = host.parentNode;
     host.dataset.zoomBase = Math.round(host.getBoundingClientRect().width) || 460;
     host.style.transform = 'none';   // 取消縮圖時的縮放，放大層用滿版
@@ -161,7 +177,8 @@
       zoomHostParent.insertBefore(zoomHost, zoomHostParent.firstChild);   // 把圖放回原視覺欄
       zoomHost = null; zoomHostParent = null;
     }
-    document.getElementById('zoomBody').innerHTML = '';
+    const body = document.getElementById('zoomBody');
+    if (body) { body.innerHTML = ''; body.style.minHeight = ''; }
     m.classList.add('hidden');
     document.getElementById('zoomBar').classList.add('hidden');
     if (typeof clearPen === 'function') clearPen();   // 清掉講解時的筆跡

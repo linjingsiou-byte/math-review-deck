@@ -583,16 +583,15 @@ svg .dim { fill: var(--muted); }
   overflow: auto; padding: 82px clamp(20px, 5vw, 80px) 56px;
 }
 .zoom-modal.hidden, .zoom-bar.hidden { display: none !important; }
-.zoom-body { position: relative; min-height: 100%; display: flex; flex-direction: column; }
-.zoom-q { font-size: clamp(23px, 3.3vw, 42px); line-height: 1.7; color: var(--ink); font-weight: 500; }
-.zoom-sol { display: none; margin-top: 28px; padding-top: 20px; border-top: 2px dashed #cdd6e2; }
+.zoom-body { position: relative; min-height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+.zoom-q { font-size: clamp(23px, 3.3vw, 42px); line-height: 1.7; color: var(--ink); font-weight: 500; width: 100%; }
+.zoom-sol { display: none; margin-top: 28px; padding-top: 20px; border-top: 2px dashed #cdd6e2; width: 100%; }
 .zoom-sol.show { display: block; }
 .zoom-sol ol { font-size: clamp(19px, 2.7vw, 33px); line-height: 1.9; padding-left: 1.3em; margin: 0; }
 .zoom-sol li { margin-bottom: 10px; }
 .zoom-ans { margin-top: 20px; font-size: clamp(21px, 2.9vw, 35px); font-weight: 900; color: #fff; background: var(--ct); display: inline-block; padding: 9px 26px; border-radius: 14px; }
-/* 圖解模式：放大的視覺 host 撐滿 */
-.zoom-body > .visual-host { flex: 1; min-height: 0; }
-.zoom-body > .visual-host svg { max-height: 80vh; }
+/* 圖解模式：放大的視覺 host */
+.zoom-body > .visual-host { flex: none; max-width: 100%; }
 
 /* 放大控制列：z-index 1300 > 畫筆畫布，按鈕隨時可點 */
 .zoom-bar {
