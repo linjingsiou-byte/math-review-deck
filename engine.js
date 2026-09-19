@@ -5,11 +5,18 @@
 (function () {
   const DECK = window.DECK || [];
 
-  // 攤平：每章先放一張章名分隔頁，再放內容頁
+  // 攤平：每章先放一張章名分隔頁，再放內容頁，結尾放版權聲明頁
   const flat = [];
   DECK.forEach((chap, ci) => {
     flat.push({ type: 'divider', ch: chap.ch, color: chap.color, title: chap.title, sections: chap.sections });
     chap.slides.forEach(s => flat.push(Object.assign({ type: 'slide', ch: chap.ch, color: chap.color }, s)));
+  });
+  flat.push({
+    type: 'copyright',
+    ch: '©',
+    sec: '版權',
+    color: '#0284c7',
+    title: '教材來源與版權免責聲明'
   });
 
   let idx = 0;
@@ -46,7 +53,7 @@
     }
   }
   function fitSlide() {
-    if (!slideEl || slideEl.classList.contains('divider')) return;
+    if (!slideEl || slideEl.classList.contains('divider') || slideEl.classList.contains('copyright-page')) return;
     const info = slideEl.querySelector('.slide-info');
     if (info) fitEl(info, info.querySelector('.col-fit'));
     const vis = slideEl.querySelector('.slide-visual');
@@ -265,6 +272,17 @@
       wrap.appendChild(items);
       tocEl.appendChild(wrap);
     });
+
+    // TOC 底部新增版權聲明按鈕
+    const copyWrap = document.createElement('div');
+    copyWrap.className = 'toc-chapter open';
+    copyWrap.style.setProperty('--ct', '#0284c7');
+    const copyHead = document.createElement('div');
+    copyHead.className = 'toc-chead';
+    copyHead.innerHTML = `<span class="toc-dot"></span>© 教材來源與版權聲明`;
+    copyHead.onclick = () => { go(flat.length - 1); if (window.innerWidth <= 1080) tocEl.classList.remove('open'); };
+    copyWrap.appendChild(copyHead);
+    tocEl.appendChild(copyWrap);
   }
 
   function markTOC() {
@@ -301,6 +319,47 @@
       });
 
       crumbEl.innerHTML = `第 ${s.ch} 章　<b>${renderTitle(s.title)}</b>`;
+    } else if (s.type === 'copyright') {
+      slideEl.className = 'slide copyright-page';
+      slideEl.innerHTML = `
+        <div class="cp-card">
+          <div class="cp-header">
+            <span class="cp-badge">© 版權與教學聲明</span>
+            <h2 class="cp-title">康軒國小數學三上 全冊視覺化複習網站</h2>
+          </div>
+          <div class="cp-grid">
+            <div class="cp-box">
+              <div class="cp-box-title">📘 教材內容與指標來源</div>
+              <ul class="cp-list">
+                <li>本視覺化教材對應 <b>108 課綱國小數學第 5 冊（三上）</b> 學習指標（n-II-1, s-II-1 等）。</li>
+                <li>單元章節、觀念進度與題型情境參考 <b>康軒文教事業（康軒版）國小三年級上冊數學課本與習作</b> 之架構設計。</li>
+              </ul>
+            </div>
+            <div class="cp-box">
+              <div class="cp-box-title">⚖️ 著作權與權利宣告</div>
+              <ul class="cp-list">
+                <li><b>視覺化動態教具與 Web 引擎</b>：由 <b>三師爸 (Sense Bar) 數學領域輔導團隊</b> 設計開發。</li>
+                <li><b>課本品牌與原始內容權利</b>：康軒版課本與習作之原始文字、品牌與教材題型著作權歸原出版公司 <b>康軒文教事業股份有限公司</b> 所有。</li>
+              </ul>
+            </div>
+            <div class="cp-box">
+              <div class="cp-box-title">🎁 免費教育使用與授權條款</div>
+              <ul class="cp-list">
+                <li><b>非商業教育授權</b>：開放予全台國小教師、學生、家長與輔導員於學校課堂、公開課研討、線上教學及自主複習中<b>免費非商業使用</b>。</li>
+                <li><b>嚴禁商業盈利行為</b>：未經原作者與版權方書面授權，禁止任何形式之打包販售、付費轉載或商業盈利行為。</li>
+              </ul>
+            </div>
+            <div class="cp-box">
+              <div class="cp-box-title">🛠️ 引擎技術與致謝</div>
+              <ul class="cp-list">
+                <li><b>核心開發技術</b>：HTML5 / SVG / Vanilla CSS / ES6+ Dynamic Engine。</li>
+                <li><b>數學公式渲染</b>：感謝 MathJax (v3 es5 tex-svg) 開源數學引擎提供支援。</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      `;
+      crumbEl.innerHTML = `<b>© 教材來源與版權聲明</b>`;
     } else {
       slideEl.className = 'slide';
       // 左：概念欄
@@ -559,6 +618,18 @@
     else if (e.key === 'p' || e.key === 'P') setPen(!penOn);
     else if (e.key === 'c' || e.key === 'C') clearPen();
   });
+
+  const copyToggle = $('copyToggle');
+  if (copyToggle) copyToggle.onclick = () => go(flat.length - 1);
+  const coverCopyBtn = $('coverCopyBtn');
+  if (coverCopyBtn) {
+    coverCopyBtn.onclick = () => {
+      $('cover').classList.add('hidden');
+      $('app').classList.remove('hidden');
+      fitPen();
+      go(flat.length - 1);
+    };
+  }
 
   buildTOC();
 

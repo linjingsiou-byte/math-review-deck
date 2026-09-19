@@ -627,3 +627,79 @@ svg .dim { fill: var(--muted); }
   .slide { padding: 20px; gap: 18px; }
   .nav-btn { padding: 10px 14px; font-size: 14px; }
 }
+
+/* ===================== 版權與教學聲明頁 ===================== */
+.copyright-page {
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  overflow-y: auto;
+}
+.cp-card {
+  width: 100%;
+  max-width: 900px;
+  background: #ffffff;
+  border: 2px solid #cbd5e1;
+  border-radius: 20px;
+  padding: 28px 32px;
+  box-shadow: 0 12px 32px rgba(15, 23, 42, 0.08);
+}
+.cp-header {
+  text-align: center;
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 2px dashed #e2e8f0;
+}
+.cp-badge {
+  display: inline-block;
+  background: #eff6ff;
+  color: #2563eb;
+  border: 1px solid #93c5fd;
+  font-size: 13px;
+  font-weight: 800;
+  padding: 4px 14px;
+  border-radius: 999px;
+  margin-bottom: 8px;
+}
+.cp-title {
+  font-size: clamp(20px, 2.5vw, 28px);
+  font-weight: 900;
+  color: #0f172a;
+  margin: 0;
+}
+.cp-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+}
+@media (max-width: 768px) {
+  .cp-grid {
+    grid-template-columns: 1fr;
+  }
+}
+.cp-box {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  padding: 16px 20px;
+}
+.cp-box-title {
+  font-size: 15px;
+  font-weight: 900;
+  color: #1e293b;
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.cp-list {
+  margin: 0;
+  padding-left: 18px;
+  font-size: 13.5px;
+  line-height: 1.7;
+  color: #475569;
+}
+.cp-list li {
+  margin-bottom: 6px;
+}

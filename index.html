@@ -23,7 +23,10 @@
       <h1 class="cover-title">三上全冊數學視覺化複習網站</h1>
       <p class="cover-sub">10000以內的數 · 四位數的加減 · 毫米 · 乘法 · 角 · 面積 · 除法 · 公升和毫升 · 分數</p>
       <div class="cover-chapters" id="coverChapters"></div>
-      <button class="cover-start" id="startBtn">開始複習 →</button>
+      <div style="display:flex; justify-content:center; gap:12px; align-items:center; flex-wrap:wrap;">
+        <button class="cover-start" id="startBtn">開始複習 →</button>
+        <button class="cover-copyright" id="coverCopyBtn" style="padding:12px 24px; border-radius:999px; border:1.5px solid rgba(255,255,255,0.4); background:rgba(255,255,255,0.15); color:#fff; font-weight:800; font-size:15px; cursor:pointer; backdrop-filter:blur(4px);">📜 版權與教學聲明</button>
+      </div>
       <p class="cover-hint">用 ← → 鍵翻頁，或點左側目錄跳章。空白鍵下一頁。</p>
     </div>
   </section>
@@ -35,6 +38,7 @@
       <button class="home-btn" id="homeBtn" title="回封面">✦ 三上數學</button>
       <div class="crumb" id="crumb"></div>
       <div class="top-actions">
+        <button class="ghost-btn" id="copyToggle" title="版權聲明">📜 版權</button>
         <button class="ghost-btn" id="tocToggle" title="目錄">☰ 目錄</button>
       </div>
     </header>
