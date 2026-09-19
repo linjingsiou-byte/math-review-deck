@@ -184,7 +184,7 @@ window.DECK = window.DECK || [];
           sl.oninput = () => {
             const n = +sl.value;
             numv.textContent = n;
-            totalv.innerHTML = n === 4 ? `${hFrac(4, 4)} ＝ 1` : hFrac(n, 4);
+            totalv.innerHTML = n === 4 ? `${hFrac(4, 4)} 張 ＝ 1 張` : `${hFrac(n, 4)} 張`;
             let out = SV.fractionPie({ cx: 200, cy: 80, r: 65, total: 4, parts: n, colors: [n === 4 ? '#059669' : '#0ea5e9', '#f1f5f9'] });
             out += `<rect x="290" y="55" width="95" height="50" rx="10" fill="${n === 4 ? '#ecfdf5' : '#eff6ff'}" stroke="${n === 4 ? '#059669' : '#0ea5e9'}" stroke-width="1.8"/>`;
             out += `<text x="337" y="85" text-anchor="middle" font-size="15" font-weight="900" fill="${n === 4 ? '#059669' : '#0ea5e9'}">${n === 4 ? '等於 1 張！' : n + ' / 4'}</text>`;
