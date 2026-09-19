@@ -315,29 +315,128 @@ window.DECK = window.DECK || [];
         ],
         formula: { label: '進借位規則', tex: '1000\\text{ mL} \\rightleftarrows 1\\text{ L}' },
         visual: (h) => {
-          out += TX(311, 58, '4 L 200 mL － 1 L 450 mL', { fs: 11.5, c: '#9f1239', anchor: 'middle' });
+          h.innerHTML = `
+            <div style="width:100%; font-family:sans-serif;">
+              <div style="display:flex; gap:8px; margin-bottom:8px;">
+                <button id="capAddBtn" style="flex:1; padding:5px; border-radius:8px; border:1.5px solid #059669; background:#059669; color:#fff; font-weight:900; font-size:12px; cursor:pointer;">➕ 加法進位</button>
+                <button id="capSubBtn" style="flex:1; padding:5px; border-radius:8px; border:1.5px solid #cbd5e1; background:#fff; color:#334155; font-weight:900; font-size:12px; cursor:pointer;">➖ 減法借位</button>
+              </div>
+              <div id="capCalcStage" style="background:#f8fafc; border:1px solid #cbd5e1; border-radius:10px; padding:10px; height:170px; overflow:hidden;"></div>
+              <div style="display:flex; gap:8px; margin-top:8px; align-items:center;">
+                <button id="capReset" style="padding:5px 12px; border-radius:8px; border:1px solid #cbd5e1; background:#fff; font-weight:800; font-size:12px; cursor:pointer;">↺ 重置</button>
+                <button id="capNext" style="flex:1; padding:6px; border-radius:8px; border:none; background:linear-gradient(120deg, #059669, #0284c7); color:#fff; font-weight:900; font-size:13px; cursor:pointer;">Step N: 下一步 →</button>
+              </div>
+            </div>
+          `;
 
-          out += TX(267, 90, 'L', { fs: 13, c: '#64748b', anchor: 'middle', fw: '900' });
-          out += TX(337, 90, 'mL', { fs: 13, c: '#64748b', anchor: 'middle', fw: '900' });
+          let mode = 'ADD'; // 'ADD' or 'SUB'
+          let step = 0;
 
-          out += `<line x1="260" y1="108" x2="274" y2="124" stroke="${RED}" stroke-width="2"/>`;
-          out += TX(267, 76, '3', { fs: 13, c: RED, anchor: 'middle', fw: '900' });
-          out += TX(337, 76, '1000', { fs: 12, c: RED, anchor: 'middle', fw: '900' });
+          const addBtn = h.querySelector('#capAddBtn');
+          const subBtn = h.querySelector('#capSubBtn');
+          const stage = h.querySelector('#capCalcStage');
+          const capReset = h.querySelector('#capReset');
+          const capNext = h.querySelector('#capNext');
 
-          out += TX(267, 118, '4', { fs: 16, c: '#0f172a', anchor: 'middle', fw: '900' });
-          out += TX(337, 118, '200', { fs: 15, c: '#0f172a', anchor: 'middle', fw: '900' });
-          out += TX(237, 142, '－', { fs: 16, c: '#0f172a', anchor: 'middle', fw: '900' });
-          out += TX(267, 142, '1', { fs: 16, c: '#0f172a', anchor: 'middle', fw: '900' });
-          out += TX(337, 142, '450', { fs: 15, c: '#0f172a', anchor: 'middle', fw: '900' });
+          const STEPS = {
+            ADD: [
+              '點擊「下一步」，觀察「2 L 600 mL ＋ 1 L 550 mL」直式。',
+              'Step 1：毫升欄相加 — 600 ＋ 550 ＝ 1150 mL。',
+              'Step 2：1150 mL 滿 1000 mL → 寫 150，向公升欄進 1！',
+              'Step 3：公升欄：2 ＋ 1 ＋進位 1 ＝ 4 L。答案：4 L 150 mL ✅'
+            ],
+            SUB: [
+              '點擊「下一步」，觀察「4 L 200 mL － 1 L 450 mL」直式。',
+              'Step 1：毫升欄 200 不夠減 450，需向公升欄借 1 L！',
+              'Step 2：借 1 L 換 1000 mL → 毫升欄變 1200 mL，1200 － 450 ＝ 750 mL。',
+              'Step 3：公升欄：4L 借出 1 剩 3，3 － 1 ＝ 2 L。答案：2 L 750 mL ✅'
+            ]
+          };
 
-          out += `<line x1="232" y1="152" x2="367" y2="152" stroke="#0f172a" stroke-width="2"/>`;
+          function renderCapCalc() {
+            const isAdd = mode === 'ADD';
+            let s = '';
 
-          out += TX(267, 178, '2', { fs: 17, c: RED, anchor: 'middle', fw: '900' });
-          out += TX(337, 178, '750', { fs: 16, c: RED, anchor: 'middle', fw: '900' });
+            if (isAdd) {
+              const lCol = 55, rCol = 135;
+              s += TX(lCol, 18, 'L', { fs: 13, c: '#64748b', anchor: 'middle', fw: '900' });
+              s += TX(rCol, 18, 'mL', { fs: 13, c: '#64748b', anchor: 'middle', fw: '900' });
 
-          out += TX(311, 215, '向 4L 借 1L 換 1000mL 再減', { fs: 10.5, c: RED, anchor: 'middle', fw: '900' });
+              // 進位標記
+              if (step >= 2) s += TX(lCol, 8, '①', { fs: 13, c: RED, anchor: 'middle', fw: '900' });
 
-          h.innerHTML = svg('0 0 420 250', out);
+              s += TX(lCol, 46, '2', { fs: 16, c: '#0f172a', anchor: 'middle', fw: '900' });
+              s += TX(rCol, 46, '600', { fs: 15, c: '#0f172a', anchor: 'middle', fw: '900' });
+              s += TX(20, 68, '＋', { fs: 16, c: '#0f172a', anchor: 'middle', fw: '900' });
+              s += TX(lCol, 68, '1', { fs: 16, c: '#0f172a', anchor: 'middle', fw: '900' });
+              s += TX(rCol, 68, '550', { fs: 15, c: step >= 1 ? AMB : '#0f172a', anchor: 'middle', fw: '900' });
+
+              s += `<line x1="16" y1="78" x2="175" y2="78" stroke="#0f172a" stroke-width="2"/>`;
+
+              if (step >= 1) s += TX(rCol, 103, step >= 2 ? '150' : '1150', { fs: 15, c: step >= 2 ? GRN : AMB, anchor: 'middle', fw: '900' });
+              if (step >= 3) s += TX(lCol, 103, '4', { fs: 17, c: GRN, anchor: 'middle', fw: '900' });
+
+              // 右側說明
+              s += `<rect x="185" y="8" width="175" height="130" rx="8" fill="#ecfdf5" stroke="#059669" stroke-width="1.5"/>`;
+              const desc = STEPS.ADD[step];
+              const lines = []; let tmp = desc;
+              while (tmp.length > 18) { lines.push(tmp.slice(0, 18)); tmp = tmp.slice(18); }
+              lines.push(tmp);
+              lines.forEach((ln, i) => { s += TX(272, 32 + i * 22, ln, { fs: 11.5, c: '#065f46', anchor: 'middle', fw: '800' }); });
+
+            } else {
+              const lCol = 55, rCol = 135;
+              s += TX(lCol, 18, 'L', { fs: 13, c: '#64748b', anchor: 'middle', fw: '900' });
+              s += TX(rCol, 18, 'mL', { fs: 13, c: '#64748b', anchor: 'middle', fw: '900' });
+
+              // 借位標記
+              if (step >= 1) {
+                s += `<line x1="48" y1="35" x2="62" y2="51" stroke="${RED}" stroke-width="2"/>`;
+                s += TX(lCol, 28, '3', { fs: 13, c: RED, anchor: 'middle', fw: '900' });
+              }
+              if (step >= 2) {
+                s += TX(rCol, 28, '1200', { fs: 10.5, c: RED, anchor: 'middle', fw: '900' });
+              }
+
+              s += TX(lCol, 46, '4', { fs: 16, c: '#0f172a', anchor: 'middle', fw: '900' });
+              s += TX(rCol, 46, '200', { fs: 15, c: '#0f172a', anchor: 'middle', fw: '900' });
+              s += TX(20, 68, '－', { fs: 16, c: '#0f172a', anchor: 'middle', fw: '900' });
+              s += TX(lCol, 68, '1', { fs: 16, c: '#0f172a', anchor: 'middle', fw: '900' });
+              s += TX(rCol, 68, '450', { fs: 15, c: step >= 1 ? AMB : '#0f172a', anchor: 'middle', fw: '900' });
+
+              s += `<line x1="16" y1="78" x2="175" y2="78" stroke="#0f172a" stroke-width="2"/>`;
+
+              if (step >= 2) s += TX(rCol, 103, '750', { fs: 15, c: RED, anchor: 'middle', fw: '900' });
+              if (step >= 3) s += TX(lCol, 103, '2', { fs: 17, c: RED, anchor: 'middle', fw: '900' });
+
+              s += `<rect x="185" y="8" width="175" height="130" rx="8" fill="#fff1f2" stroke="#e11d48" stroke-width="1.5"/>`;
+              const desc = STEPS.SUB[step];
+              const lines = []; let tmp = desc;
+              while (tmp.length > 18) { lines.push(tmp.slice(0, 18)); tmp = tmp.slice(18); }
+              lines.push(tmp);
+              lines.forEach((ln, i) => { s += TX(272, 32 + i * 22, ln, { fs: 11.5, c: '#9f1239', anchor: 'middle', fw: '800' }); });
+            }
+
+            stage.innerHTML = `<svg viewBox="0 0 370 155" style="width:100%; height:100%;">${s}</svg>`;
+            capNext.textContent = step < 3 ? `Step ${step + 1}: 下一步 →` : '✅ 完成！';
+          }
+
+          addBtn.onclick = () => {
+            mode = 'ADD'; step = 0;
+            addBtn.style.background = '#059669'; addBtn.style.color = '#fff'; addBtn.style.borderColor = '#059669';
+            subBtn.style.background = '#fff'; subBtn.style.color = '#334155'; subBtn.style.borderColor = '#cbd5e1';
+            renderCapCalc();
+          };
+          subBtn.onclick = () => {
+            mode = 'SUB'; step = 0;
+            subBtn.style.background = '#e11d48'; subBtn.style.color = '#fff'; subBtn.style.borderColor = '#e11d48';
+            addBtn.style.background = '#fff'; addBtn.style.color = '#334155'; addBtn.style.borderColor = '#cbd5e1';
+            renderCapCalc();
+          };
+          capReset.onclick = () => { step = 0; renderCapCalc(); };
+          capNext.onclick = () => { step = (step + 1) % 4; renderCapCalc(); };
+
+          renderCapCalc();
         },
         caption: '容量相加滿 1000 毫升要向公升進 1，不夠減時向公升借 1 當 1000 毫升。',
         example: {
