@@ -176,9 +176,69 @@ npx wrangler pages deploy 我的複習網站 --project-name 我的專案名 --br
 
 ---
 
+## 版權與教學聲明頁規範（Copyright Page Specification）
+
+每份視覺化教材網站引擎末頁（`s.type === 'copyright'`）必須包含標準版權與教學聲明頁。其中**教材來源與課綱對應之冊數**須依據實際製作的教材來源動態修改：
+
+1. **版權頁四大部分結構**：
+   - **📘 教材內容與指標來源**：註明對應課綱學習指標（如 `108 課綱國小數學第 5 冊（三上）`）與教材來源（如 `康軒文教事業（康軒版）國小三年級上冊數學課本與習作`）。冊數與版次依實際專案動態修改。
+   - **⚖️ 著作權與權利宣告**：
+     - 引擎聲明：`<b>視覺化動態教具與 Web 引擎</b>：感謝 <b>三師爸 (Sense Bar)</b> 分享視覺化動態教材技能，經<b>林敬修老師</b>修改技能後設計及開發。`
+     - 內容聲明：`<b>課本品牌與原始內容權利</b>：<出版社簡稱>版課本與習作之原始文字、品牌與教材題型著作權歸原出版公司 <b><出版社全稱></b> 所有。`
+   - **🎁 免費教育使用與授權條款**：宣告全台教師、學生、家長與輔導員免費非商業使用，嚴禁打包販售與商業盈利。
+   - **🛠️ 引擎技術與致謝**：標註 HTML5 / SVG / Vanilla CSS / ES6+ Dynamic Engine 技術及 MathJax 公式引擎致謝。
+
+2. **引擎標準 HTML 範本**：
+```javascript
+else if (s.type === 'copyright') {
+  slideEl.className = 'slide copyright-page';
+  slideEl.innerHTML = `
+    <div class="cp-card">
+      <div class="cp-header">
+        <span class="cp-badge">© 版權與教學聲明</span>
+        <h2 class="cp-title">${SUBJECT_TITLE} 全冊視覺化複習網站</h2>
+      </div>
+      <div class="cp-grid">
+        <div class="cp-box">
+          <div class="cp-box-title">📘 教材內容與指標來源</div>
+          <ul class="cp-list">
+            <li>本視覺化教材對應 <b>108 課綱${CURRICULUM_VOLUME_NAME}</b> 學習指標（${CURRICULUM_INDICATORS}）。</li>
+            <li>單元章節、觀念進度與題型情境參考 <b>${TEXTBOOK_SOURCE_NAME}</b> 之架構設計。</li>
+          </ul>
+        </div>
+        <div class="cp-box">
+          <div class="cp-box-title">⚖️ 著作權與權利宣告</div>
+          <ul class="cp-list">
+            <li><b>視覺化動態教具與 Web 引擎</b>：感謝 <b>三師爸 (Sense Bar)</b> 分享視覺化動態教材技能，經<b>林敬修老師</b>修改技能後設計及開發。</li>
+            <li><b>課本品牌與原始內容權利</b>：${TEXTBOOK_PUBLISHER_SHORT}版課本與習作之原始文字、品牌與教材題型著作權歸原出版公司 <b>${TEXTBOOK_PUBLISHER_FULL}</b> 所有。</li>
+          </ul>
+        </div>
+        <div class="cp-box">
+          <div class="cp-box-title">🎁 免費教育使用與授權條款</div>
+          <ul class="cp-list">
+            <li><b>非商業教育授權</b>：開放予全台國小教師、學生、家長與輔導員於學校課堂、公開課研討、線上教學及自主複習中<b>免費非商業使用</b>。</li>
+            <li><b>嚴禁商業盈利行為</b>：未經原作者與版權方書面授權，禁止任何形式之打包販售、付費轉載或商業盈利行為。</li>
+          </ul>
+        </div>
+        <div class="cp-box">
+          <div class="cp-box-title">🛠️ 引擎技術與致謝</div>
+          <ul class="cp-list">
+            <li><b>核心開發技術</b>：HTML5 / SVG / Vanilla CSS / ES6+ Dynamic Engine。</li>
+            <li><b>數學公式渲染</b>：感謝 MathJax (v3 es5 tex-svg) 開源數學引擎提供支援。</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  `;
+}
+```
+
+---
+
 ## 延伸與維護
 
 - **新增一冊**：重跑 `new_deck.py`，共用資產會自動複製。
 - **改引擎或樣式**：`engine.js`／`style.css`／`svg.js` 是六份簡報共用的同一份，
   改完要**每一個資料夾都複製一次**再各自部署，否則規格會分歧。
 - **只改某一頁**：直接編對應 `chN.js` 內那個投影片物件，其餘不受影響。
+
