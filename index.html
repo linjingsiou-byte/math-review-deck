@@ -3,116 +3,198 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>康軒國小數學 三上 全冊視覺化複習網站</title>
-  <meta name="description" content="康軒國小數學 三上 全冊視覺化複習網站" />
-  <link rel="stylesheet" href="style.css?v=20260909_v18" />
-  <script>
-    window.MathJax = {
-      tex: { inlineMath: [['\\(', '\\)']], displayMath: [['$$', '$$']] },
-      svg: { fontCache: 'global' },
-      startup: { typeset: false }
-    };
-  </script>
-  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js" id="MathJax-script" async></script>
+  <title>康軒國小中年級數學 互動視覺化教材入口網站</title>
+  <meta name="description" content="108課綱康軒國小中年級數學視覺化複習網站：三年級上冊與四年級上冊全冊互動教材" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;600;800;900&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #2563eb;
+      --primary-dark: #1d4ed8;
+      --bg: #0f172a;
+      --card-bg: rgba(30, 41, 59, 0.85);
+      --border: rgba(255, 255, 255, 0.12);
+      --text: #f8fafc;
+      --text-muted: #94a3b8;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Noto Sans TC', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: radial-gradient(circle at 50% 20%, #1e293b 0%, #0f172a 100%);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 32px 20px;
+    }
+    .container {
+      max-width: 900px;
+      width: 100%;
+      text-align: center;
+    }
+    .badge {
+      display: inline-block;
+      padding: 6px 16px;
+      border-radius: 999px;
+      background: rgba(37, 99, 235, 0.25);
+      color: #93c5fd;
+      border: 1px solid rgba(147, 197, 253, 0.35);
+      font-size: 14px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      margin-bottom: 18px;
+    }
+    h1 {
+      font-size: clamp(26px, 5vw, 40px);
+      font-weight: 900;
+      letter-spacing: -0.5px;
+      margin-bottom: 12px;
+      background: linear-gradient(135deg, #ffffff 0%, #93c5fd 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    p.subtitle {
+      font-size: clamp(15px, 2.5vw, 18px);
+      color: var(--text-muted);
+      margin-bottom: 40px;
+      line-height: 1.6;
+    }
+    .deck-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 24px;
+      margin-bottom: 40px;
+    }
+    .deck-card {
+      background: var(--card-bg);
+      border: 1.5px solid var(--border);
+      border-radius: 20px;
+      padding: 32px 24px;
+      text-decoration: none;
+      color: inherit;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      transition: all 0.25s ease;
+      backdrop-filter: blur(12px);
+      position: relative;
+      overflow: hidden;
+    }
+    .deck-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0; height: 5px;
+      background: linear-gradient(90deg, #3b82f6, #60a5fa);
+      opacity: 0;
+      transition: opacity 0.25s;
+    }
+    .deck-card.grade-4::before {
+      background: linear-gradient(90deg, #8b5cf6, #ec4899);
+    }
+    .deck-card:hover {
+      transform: translateY(-5px);
+      border-color: rgba(147, 197, 253, 0.45);
+      box-shadow: 0 16px 36px rgba(0, 0, 0, 0.35);
+    }
+    .deck-card:hover::before {
+      opacity: 1;
+    }
+    .card-icon {
+      font-size: 48px;
+      margin-bottom: 16px;
+    }
+    .card-grade {
+      font-size: 22px;
+      font-weight: 900;
+      color: #fff;
+      margin-bottom: 8px;
+    }
+    .card-units {
+      font-size: 14px;
+      color: #38bdf8;
+      font-weight: 700;
+      margin-bottom: 14px;
+    }
+    .card-desc {
+      font-size: 13.5px;
+      color: var(--text-muted);
+      line-height: 1.6;
+      margin-bottom: 24px;
+      flex-grow: 1;
+      text-align: left;
+    }
+    .card-btn {
+      width: 100%;
+      padding: 12px 20px;
+      border-radius: 12px;
+      background: #2563eb;
+      color: #fff;
+      font-size: 15px;
+      font-weight: 800;
+      border: none;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: background 0.2s;
+    }
+    .deck-card.grade-4 .card-btn {
+      background: #7c3aed;
+    }
+    .deck-card:hover .card-btn {
+      background: #1d4ed8;
+    }
+    .deck-card.grade-4:hover .card-btn {
+      background: #6d28d9;
+    }
+    footer {
+      font-size: 13px;
+      color: #64748b;
+      line-height: 1.6;
+    }
+  </style>
 </head>
 <body>
-  <!-- 封面 -->
-  <section id="cover" class="cover">
-    <div class="cover-inner">
-      <p class="cover-eyebrow">108 課綱國小數學 · 第 5 冊（三上）</p>
-      <h1 class="cover-title">三上全冊數學視覺化複習網站</h1>
-      <p class="cover-sub">10000以內的數 · 四位數的加減 · 毫米 · 乘法 · 角 · 面積 · 除法 · 公升和毫升 · 分數</p>
-      <div class="cover-chapters" id="coverChapters"></div>
-      <div style="display:flex; justify-content:center; gap:12px; align-items:center; flex-wrap:wrap;">
-        <button class="cover-start" id="startBtn">開始複習 →</button>
-        <button class="cover-copyright" id="coverCopyBtn" style="padding:12px 24px; border-radius:999px; border:1.5px solid rgba(255,255,255,0.4); background:rgba(255,255,255,0.15); color:#fff; font-weight:800; font-size:15px; cursor:pointer; backdrop-filter:blur(4px);">📜 版權與教學聲明</button>
-      </div>
-      <p class="cover-hint">用 ← → 鍵翻頁，或點左側目錄跳章。空白鍵下一頁。</p>
-    </div>
-  </section>
+  <div class="container">
+    <div class="badge">108 課綱 · 國小中年級數學</div>
+    <h1>康軒版中年級數學 視覺化教材網站</h1>
+    <p class="subtitle">零金鑰 · 零依賴 · 純前端 SVG 動態互動教材<br>一頁一重點、觀念在左、動態在右、拖滑桿就會動</p>
 
-  <!-- 主體 -->
-  <div id="app" class="app hidden">
-    <!-- 頂部列 -->
-    <header class="topbar">
-      <button class="home-btn" id="homeBtn" title="回封面">✦ 三上數學</button>
-      <div class="crumb" id="crumb"></div>
-      <div class="top-actions">
-        <button class="ghost-btn" id="copyToggle" title="版權聲明">📜 版權</button>
-        <button class="ghost-btn" id="tocToggle" title="目錄">☰ 目錄</button>
-      </div>
-    </header>
-
-    <div class="body">
-      <!-- 目錄側欄 -->
-      <aside class="toc" id="toc"></aside>
-
-      <!-- 舞台 -->
-      <main class="stage">
-        <div class="slide" id="slide"></div>
-
-        <!-- 底部控制列 -->
-        <div class="controlbar">
-          <button class="nav-btn" id="prevBtn">‹ 上一頁</button>
-          <div class="progress">
-            <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
-            <span class="progress-text" id="progressText">1 / 1</span>
-          </div>
-          <button class="nav-btn" id="nextBtn">下一頁 ›</button>
+    <div class="deck-grid">
+      <!-- 3上 卡片 -->
+      <a href="./3上/index.html" class="deck-card grade-3">
+        <div class="card-icon">📘</div>
+        <div class="card-grade">三年級 上冊</div>
+        <div class="card-units">全冊共 9 個單元 · 39 張重點頁</div>
+        <div class="card-desc">
+          • 10000以內的數（萬位計數板、定位板）<br>
+          • 四位數加減、毫米長度與直尺<br>
+          • 乘法、除法、角、面積、公升毫升、分數
         </div>
-      </main>
+        <div class="card-btn">進入 3 年級上冊 →</div>
+      </a>
+
+      <!-- 4上 卡片 -->
+      <a href="./4上/index.html" class="deck-card grade-4">
+        <div class="card-icon">📙</div>
+        <div class="card-grade">四年級 上冊</div>
+        <div class="card-units">全冊共 10 個單元 · 49 張重點頁</div>
+        <div class="card-desc">
+          • 一億以內的數、整數的乘除法（省行直式、調商）<br>
+          • 角度（周角/量角器延長線）、公里換算<br>
+          • 三角形分類/撕角拼平角、二位小數、分數整數倍、統計圖
+        </div>
+        <div class="card-btn">進入 4 年級上冊 →</div>
+      </a>
     </div>
 
-    <!-- 授課教具：畫筆畫布、雷射點、浮動工具列 -->
-    <canvas id="penCanvas" class="pen-canvas"></canvas>
-    <div id="laserDot" class="laser-dot hidden"></div>
-    <div id="dock" class="dock">
-      <button class="dbtn" id="dkSidebar" title="收合／展開側欄">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2"/><line x1="9" y1="4" x2="9" y2="20"/></svg>
-      </button>
-      <button class="dbtn" id="dkPrev" title="上一頁 (←)">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 5 8 12 15 19"/></svg>
-      </button>
-      <button class="dbtn" id="dkNext" title="下一頁 (→)">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 5 16 12 9 19"/></svg>
-      </button>
-      <div class="dsep"></div>
-      <button class="dbtn" id="dkLaser" title="雷射筆">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="2.5" fill="currentColor" stroke="none"/></svg>
-      </button>
-      <button class="dbtn" id="dkPen" title="畫筆">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
-      </button>
-      <div class="dcolors hidden" id="dkColors">
-        <button class="dcolor active" data-c="#e11d48" style="--sc:#e11d48" title="紅"></button>
-        <button class="dcolor" data-c="#2563eb" style="--sc:#2563eb" title="藍"></button>
-        <button class="dcolor" data-c="#059669" style="--sc:#059669" title="綠"></button>
-        <button class="dcolor" data-c="#f59e0b" style="--sc:#f59e0b" title="黃"></button>
-        <button class="dcolor" data-c="#111827" style="--sc:#111827" title="黑"></button>
-        <button class="dbtn derase" id="dkErase" title="橡皮擦">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15l7-7 6 6-4 4H8z"/><line x1="4" y1="21" x2="20" y2="21"/></svg>
-        </button>
-      </div>
-      <button class="dbtn" id="dkClear" title="清除筆跡">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 21 6"/><path d="M8 6V4h8v2"/><path d="M6 6l1 14h10l1-14"/></svg>
-      </button>
-      <div class="dsep"></div>
-      <button class="dbtn" id="dkFull" title="全螢幕">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg>
-      </button>
-    </div>
+    <footer>
+      國小數學互動視覺化教學平台 · 支援大屏投影筆畫/雷射筆互動 · 支援 iPad 與手機響應式報讀
+    </footer>
   </div>
-
-  <script src="svg.js?v=20260909_v17"></script>
-  <script src="ch1.js?v=20260909_v17"></script>
-  <script src="ch2.js?v=20260909_v17"></script>
-  <script src="ch3.js?v=20260909_v17"></script>
-  <script src="ch4.js?v=20260909_v17"></script>
-  <script src="ch5.js?v=20260909_v17"></script>
-  <script src="ch6.js?v=20260909_v17"></script>
-  <script src="ch7.js?v=20260909_v17"></script>
-  <script src="ch8.js?v=20260909_v17"></script>
-  <script src="ch9.js?v=20260909_v17"></script>
-  <script src="engine.js?v=20260909_v17"></script>
 </body>
 </html>

@@ -242,16 +242,23 @@ const SV = (() => {
     return out;
   };
 
-  // 3.5 2D 向量 SVG 垂直分數（可在 SVG 內部直接繪製真分數）
+  // 3.5 2D 向量 SVG 垂直分數（可在 SVG 內部直接繪製真分數、假分數與帶分數）
   const fracSVG = (x, y, num, den, opt = {}) => {
     const fs = opt.fs || 12;
     const color = opt.c || '#172033';
-    const w = opt.w || 14;
-    return `<g transform="translate(${x}, ${y})">
-      <text x="0" y="-3" text-anchor="middle" font-size="${fs}" font-weight="900" fill="${color}">${num}</text>
-      <line x1="${-w/2}" y1="1" x2="${w/2}" y2="1" stroke="${color}" stroke-width="1.4"/>
-      <text x="0" y="${fs + 3}" text-anchor="middle" font-size="${fs}" font-weight="900" fill="${color}">${den}</text>
+    const numStr = String(num), denStr = String(den);
+    const maxLen = Math.max(numStr.length, denStr.length);
+    const w = opt.w || Math.max(14, maxLen * fs * 0.72 + 4);
+    let out = `<g transform="translate(${x}, ${y})">`;
+    if (opt.whole !== undefined && opt.whole !== null && opt.whole !== '') {
+      const wholeFs = opt.wholeFs || (fs + 2);
+      out += `<text x="${-w / 2 - 4}" y="${fs * 0.35}" text-anchor="end" font-size="${wholeFs}" font-weight="900" fill="${color}">${opt.whole}</text>`;
+    }
+    out += `<text x="0" y="${-fs * 0.28}" text-anchor="middle" font-size="${fs}" font-weight="900" fill="${color}">${num}</text>
+      <line x1="${-w / 2}" y1="0" x2="${w / 2}" y2="0" stroke="${color}" stroke-width="${opt.sw || 1.6}" stroke-linecap="round"/>
+      <text x="0" y="${fs * 0.85}" text-anchor="middle" font-size="${fs}" font-weight="900" fill="${color}">${den}</text>
     </g>`;
+    return out;
   };
 
   // 4. 位值對齊板（萬、千、百、十、個位 / 十分位 / 百分位）
@@ -373,10 +380,10 @@ const SV = (() => {
 
   // 8. 3D 百格板 ➔ 1000千格塊 動態堆疊合體 (Hundred to Thousand Stack)
   const hundredToThousandStack = (opt = {}) => {
-    const { x = 30, y = 100, n = 10, s = 75, color = '#2563eb' } = opt;
+    const { x = 28, y = 106, n = 10, s = 75, color = '#2563eb' } = opt;
     let out = `<g class="ht-stack">`;
     if (n < 10) {
-      const dx = 11, dy = 8;
+      const dx = 11, dy = 7.5;
       for (let i = 0; i < n; i++) {
         const bx = x + i * dx;
         const by = y - i * dy;
@@ -385,8 +392,10 @@ const SV = (() => {
         const topX = bx + 9;
         const topY = by - 12;
         out += `<circle cx="${topX.toFixed(1)}" cy="${topY.toFixed(1)}" r="4.5" fill="${isFront ? '#e11d48' : '#2563eb'}"/>`;
-        if (n <= 5 || i === 0 || i === n - 1 || (i + 1) % 2 === 0) {
-          out += `<text x="${topX.toFixed(1)}" y="${(topY - 7).toFixed(1)}" text-anchor="middle" font-size="11" font-weight="800" fill="${isFront ? '#e11d48' : '#1e293b'}">${(i + 1) * 100}</text>`;
+        // 避免與最前方的焦點數字 (i === n - 1) 撞字
+        const showText = (n <= 5) ? true : (isFront || (i !== n - 2 && (i === 0 || (i + 1) % 2 === 0)));
+        if (showText) {
+          out += `<text x="${topX.toFixed(1)}" y="${(topY - 6).toFixed(1)}" text-anchor="middle" font-size="11" font-weight="800" fill="${isFront ? '#e11d48' : '#1e293b'}">${(i + 1) * 100}</text>`;
         }
       }
       const lastX = x + (n - 1) * dx + s + 25;
@@ -396,8 +405,8 @@ const SV = (() => {
       out += `<text x="80" y="26" text-anchor="middle" font-size="20" font-weight="900" fill="${color}">＝ ${n * 100}</text>`;
       out += `</g>`;
     } else {
-      out += cube1000({ x: x + 30, y: y - 10, s: s, color: color });
-      out += `<g transform="translate(${x + s + 95}, ${y + 5})">`;
+      out += cube1000({ x: x + 25, y: y - 10, s: s, color: color });
+      out += `<g transform="translate(${x + s + 90}, ${y + 5})">`;
       out += `<rect x="0" y="-25" width="180" height="75" rx="14" fill="#eff6ff" stroke="${color}" stroke-width="2.2"/>`;
       out += `<text x="90" y="2" text-anchor="middle" font-size="16" font-weight="800" fill="${color}">10 個百格板合體</text>`;
       out += `<text x="90" y="32" text-anchor="middle" font-size="22" font-weight="900" fill="#e11d48">＝ 1 個千格積木</text>`;

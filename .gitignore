@@ -2,3 +2,7 @@ __pycache__/
 *.pyc
 .DS_Store
 node_modules/
+教材資料/
+scratch_*
+*_full_text.txt
+

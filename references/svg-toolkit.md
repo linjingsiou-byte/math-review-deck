@@ -100,6 +100,7 @@ SV.stepper(h, '0 0 440 300', [
 | `SV.clock(opt)` | 鐘面針盤工具。`opt={cx, cy, r, hour, minute, showTicks, showNumbers, color}` |
 | `SV.fractionBar(opt)` | 分數條形切分圖。`opt={x, y, w, h, total, parts, colors:['#3b82f6','#f1f5f9'], labels:[]}` |
 | `SV.fractionPie(opt)` | 分數圓形派切分圖。`opt={cx, cy, r, total, parts, colors}` |
+| `SV.fracSVG(x, y, num, den, opt)` | **2D 向量垂直分數組件**。繪製符合課本規範的真分數、假分數與帶分數。`opt={whole, fs:12, c:'#172033', sw:1.6, w}` |
 | `SV.placeValueTable(opt)` | 位值對齊板。`opt={x, y, w, h, cols:['千','百','十','個'], rows:[['2','5','0','8']], color}` |
 | `SV.verticalMath(opt)` | 直式運算板。`opt={x, y, op:'+', num1:'358', num2:'265', ans:'623', carries:[{pos:1,val:'1'}]}` |
 | `SV.baseTenBlocks(opt)` | 3D 十進位積木組。`opt={x, y, thousands:1, hundreds:2, tens:5, units:3, color}` |
@@ -116,6 +117,27 @@ SV.hundredToThousandStack({ x: 30, y: 75, n: n, s: 75, color: '#2563eb' });
 
 // 範例 3：直式加法（包含百位進位標記）
 SV.verticalMath({ x: 120, y: 30, op: '+', num1: '382', num2: '245', ans: '627', carries: [{pos: 2, val: '1'}] });
+
+// 範例 4：直式等寬中線位值欄逆向填值標準演算法
+const colW = 20, rightX = 200;
+const cols = [rightX, rightX - colW, rightX - colW * 2, rightX - colW * 3]; // 個, 十, 百, 千
+function drawDigits(num, y, offset = 0) {
+  const str = String(num);
+  let s = '';
+  for (let i = 0; i < str.length; i++) {
+    const digit = str[str.length - 1 - i];
+    s += TX(cols[offset + i], y, digit, { fs: 13, anchor: 'middle', fw: 900 });
+  }
+  return s;
+}
+
+// 範例 5：量角器雙向極座標防呆換算公式
+// cx, cy 為量角器中心點，r 為半徑，開口向右 mathDeg = deg；開口向左 mathDeg = 180 - deg
+function getRayEnd(cx, cy, r, deg, isLeftOpen = false) {
+  const mathDeg = isLeftOpen ? (180 - deg) : deg;
+  const rad = mathDeg * Math.PI / 180;
+  return { x: cx + r * Math.cos(rad), y: cy - r * Math.sin(rad) };
+}
 ```
 
 ## MathJax 重排

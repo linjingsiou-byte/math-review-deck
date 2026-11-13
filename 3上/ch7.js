@@ -188,8 +188,8 @@ window.DECK = window.DECK || [];
           const stage = h.querySelector('#divSimStage');
 
           function renderDiv() {
-            const N = parseInt(nSlider.value, 10);
-            const K = parseInt(kSlider.value, 10);
+            const N = Math.max(1, parseInt(nSlider.value, 10) || 17);
+            const K = Math.max(1, parseInt(kSlider.value, 10) || 3);
             const q = Math.floor(N / K);
             const r = N % K;
 
@@ -234,7 +234,7 @@ window.DECK = window.DECK || [];
               s += `<rect x="${bx}" y="${by}" width="50" height="46" rx="8" fill="${boxBg}" stroke="${boxBorder}" stroke-width="1.5"/>`;
               const label = divMode === 'PACK' && !zeroDrill ? `袋 ${b + 1}` : `人 ${b + 1}`;
               s += TX(bx + 25, by + 16, label, { fs: 10, c: boxBorder, anchor: 'middle', fw: '800' });
-              s += TX(bx + 25, by + 34, `●`.repeat(Math.min(dK, 5)), { fs: 11, c: '#0f172a', anchor: 'middle' });
+              s += TX(bx + 25, by + 34, `●`.repeat(Math.max(0, Math.min(5, Math.floor(dK) || 0))), { fs: 11, c: '#0f172a', anchor: 'middle' });
             }
 
             if (dR > 0) {
@@ -242,7 +242,7 @@ window.DECK = window.DECK || [];
               const ry = 22 + Math.floor(dQ / 3) * 52;
               s += `<rect x="${rx}" y="${ry}" width="50" height="46" rx="8" fill="#ffe4e6" stroke="#e11d48" stroke-width="1.5" stroke-dasharray="3 3"/>`;
               s += TX(rx + 25, ry + 16, `剩餘`, { fs: 10, c: RED, anchor: 'middle', fw: '900' });
-              s += TX(rx + 25, ry + 34, `●`.repeat(dR), { fs: 11, c: RED, anchor: 'middle' });
+              s += TX(rx + 25, ry + 34, `●`.repeat(Math.max(0, Math.min(10, Math.floor(dR) || 0))), { fs: 11, c: RED, anchor: 'middle' });
             }
             s += `</g>`;
 

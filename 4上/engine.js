@@ -1,0 +1,752 @@
+/* ============================================================
+   engine.js — 簡報導覽與渲染引擎
+   讀取 window.DECK（各章 push 進來），攤平成投影片序列。
+   ============================================================ */
+(function () {
+  const DECK = window.DECK || [];
+
+  // 攤平：每章先放一張章名分隔頁，再放內容頁，結尾放版權聲明頁
+  const flat = [];
+  DECK.forEach((chap, ci) => {
+    flat.push({ type: 'divider', ch: chap.ch, color: chap.color, title: chap.title, sections: chap.sections });
+    chap.slides.forEach(s => flat.push(Object.assign({ type: 'slide', ch: chap.ch, color: chap.color }, s)));
+  });
+  flat.push({
+    type: 'copyright',
+    ch: '©',
+    sec: '版權',
+    color: '#0284c7',
+    title: '教材來源與版權免責聲明'
+  });
+
+  let idx = 0;
+
+  function renderTitle(str) {
+    if (!str) return '';
+    return str.replace(/\\?\(\\?\s*\\frac\{([^}]+)\}\{([^}]+)\}\s*\\?\)/g, (_, n, d) => `<span class="mfrac"><span class="num">${n}</span><span class="den">${d}</span></span>`);
+  }
+
+  // ---- MathJax 排版（載入前先重試，載入後自動補排版）----
+  function typeset(el, tries = 0) {
+    if (window.MathJax && MathJax.typesetPromise) {
+      MathJax.typesetPromise([el]).catch(() => {});
+    } else if (tries < 60) {
+      setTimeout(() => typeset(el, tries + 1), 200);
+    }
+  }
+
+  // ---- 自動縮放：讓整頁內容在「不捲動」的前提下盡量放大 ----
+  // 量測內容自然高度，超過欄位可視高度時才等比縮小（下限 0.5，保留字級）。
+  function fitEl(box, content) {
+    if (!box || !content) return;
+    content.style.transform = 'none';
+    content.style.transformOrigin = 'center top';
+    const comp = window.getComputedStyle(box);
+    const pad = parseFloat(comp.paddingTop || 0) + parseFloat(comp.paddingBottom || 0);
+    const avail = box.clientHeight - pad;
+    const need = content.scrollHeight;
+    if (avail > 0 && need > avail + 1) {
+      const scale = Math.max(0.65, (avail - 4) / need);
+      content.style.transform = 'scale(' + scale.toFixed(4) + ')';
+      content.style.width = (100 / scale).toFixed(2) + '%';
+    }
+  }
+  function fitSlide() {
+    if (!slideEl || slideEl.classList.contains('divider') || slideEl.classList.contains('copyright-page')) return;
+    if (window.innerWidth <= 1080) {
+      // 窄螢幕或直立平板（單欄直向捲動佈局）：
+      // 確保重置 CSS transform scale，讓內容以 100% 自然尺寸清晰顯示，支援自然滑動
+      const info = slideEl.querySelector('.slide-info .col-fit');
+      if (info) { info.style.transform = 'none'; info.style.width = '100%'; }
+      const host = slideEl.querySelector('.slide-visual .visual-host');
+      if (host) { host.style.transform = 'none'; host.style.width = '100%'; }
+      return;
+    }
+    const info = slideEl.querySelector('.slide-info');
+    if (info) fitEl(info, info.querySelector('.col-fit'));
+    const vis = slideEl.querySelector('.slide-visual');
+    if (vis) {
+      const host = vis.querySelector('.visual-host');
+      if (host) fitEl(vis, host);
+    }
+  }
+  // MathJax 排版完成後才量高縮放（公式高度需排版後才確定）
+  function typesetAndFit(el, tries = 0) {
+    if (window.MathJax && MathJax.typesetPromise) {
+      MathJax.typesetPromise([el]).then(fitSlide).catch(fitSlide);
+    } else if (tries < 60) {
+      setTimeout(() => typesetAndFit(el, tries + 1), 200);
+    } else { fitSlide(); }
+  }
+
+  /* ========== 範例／圖解「放大成整頁」（方便用畫筆講解）========== */
+  let zoomHost = null, zoomHostParent = null;   // 圖解模式被移入放大層的 host 及其原父節點
+  function ensureZoom() {
+    if (document.getElementById('zoomModal')) return;
+    const m = document.createElement('div');
+    m.id = 'zoomModal'; m.className = 'zoom-modal hidden';
+    m.innerHTML = `<div class="zoom-body" id="zoomBody"></div>`;
+    document.body.appendChild(m);
+    const bar = document.createElement('div');
+    bar.id = 'zoomBar'; bar.className = 'zoom-bar hidden';
+    bar.innerHTML = `<div class="zoom-badge" id="zoomBadge"></div>
+      <button class="zoom-btn" id="zoomSol">顯示解答</button>
+      <button class="zoom-btn zoom-x" id="zoomClose">✕ 關閉</button>`;
+    document.body.appendChild(bar);
+    bar.querySelector('#zoomClose').onclick = closeZoom;
+    bar.querySelector('#zoomSol').onclick = () => {
+      const box = document.getElementById('zoomSolBox'); if (!box) return;
+      box.classList.toggle('show');
+      bar.querySelector('#zoomSol').textContent = box.classList.contains('show') ? '收起解答' : '顯示解答';
+      typeset(box);
+    };
+  }
+  function showZoom(s, badgeTail) {
+    ensureZoom();
+    document.getElementById('zoomBadge').innerHTML = `第 ${s.ch} 章 · ${s.sec} ${s.secName || ''}　${badgeTail}`;
+    document.getElementById('zoomModal').style.setProperty('--ct', s.color);
+    document.getElementById('zoomBar').style.setProperty('--ct', s.color);
+    document.getElementById('zoomModal').classList.remove('hidden');
+    document.getElementById('zoomBar').classList.remove('hidden');
+  }
+  function openExampleModal(s) {
+    ensureZoom();
+    document.getElementById('zoomSol').style.display = '';
+    document.getElementById('zoomSol').textContent = '顯示解答';
+    document.getElementById('zoomBody').innerHTML =
+      `<div class="zoom-q">${s.example.q}</div>
+       <div class="zoom-sol" id="zoomSolBox">
+         ${s.example.steps ? `<ol>${s.example.steps.map(t => `<li>${t}</li>`).join('')}</ol>` : ''}
+         ${s.example.ans ? `<div class="zoom-ans">答：${s.example.ans}</div>` : ''}
+       </div>`;
+    showZoom(s, '範例');
+    typeset(document.getElementById('zoomBody'));
+  }
+  // 放大層：把 host 內容等比放大到填滿整頁
+  // 繪圖 SVG 有 viewBox，寬度撐滿就會連同裡面的字一起放大，不必特別處理；
+  // 但「重點整理／易錯對照」這類 HTML 內容（fbox 公式卡、表格）字級是固定 px，
+  // 框會被撐大、字卻還是原來大小 → 必須用 transform 等比放大整塊。
+  function fitZoomHost() {
+    const host = zoomHost;
+    if (!host) return;
+    const body = document.getElementById('zoomBody');
+    const modal = document.getElementById('zoomModal');
+    if (!body || !modal) return;
+
+    // 重置縮放與尺寸，以便精準量測自然內容高與寬
+    host.style.transform = 'none';
+    host.style.transformOrigin = 'top center';
+    host.style.margin = '0 auto';
+    host.style.flex = 'none';
+    host.style.height = 'auto';
+
+    // 取得基準寬度：優先使用 zoomBase (原視覺欄寬度)，量不到則預設 460
+    const baseW = +host.dataset.zoomBase || 460;
+    host.style.width = baseW + 'px';
+
+    // 量測 MathJax 排版與 HTML 渲染後的自然高度
+    const needH = host.scrollHeight;
+    if (!needH) return;
+
+    // 計算模組內部的實際可用寬高 (扣除 modal padding)
+    const comp = window.getComputedStyle(modal);
+    const padX = (parseFloat(comp.paddingLeft) || 20) + (parseFloat(comp.paddingRight) || 20);
+    const padY = (parseFloat(comp.paddingTop) || 82) + (parseFloat(comp.paddingBottom) || 56);
+
+    const availW = Math.max(260, modal.clientWidth - padX);
+    const availH = Math.max(200, modal.clientHeight - padY);
+
+    // 計算等比縮放倍率 k：
+    // 支援滿版與窄螢幕 (如手機) 動態向下縮放 (k < 1.0)，防止水平爆版與出現橫向滾動條；
+    // 上限設為 2.8 倍，讓寬螢幕時教學圖解與互動教具放大清晰呈現。
+    let k = Math.min(availW / baseW, availH / needH, 2.8);
+    k = Math.max(0.35, k);
+
+    host.style.transform = `scale(${k.toFixed(4)})`;
+
+    // 設定 body 的最小高度，確保垂直居中與滑動視差
+    body.style.minHeight = Math.round(needH * k) + 'px';
+  }
+  function openVisualModal(s, host) {
+    ensureZoom();
+    document.getElementById('zoomSol').style.display = 'none';   // 圖解不需要「顯示解答」
+    const body = document.getElementById('zoomBody');
+    body.innerHTML = '';
+    body.style.minHeight = '';
+    zoomHost = host; zoomHostParent = host.parentNode;
+    host.dataset.zoomBase = Math.round(host.getBoundingClientRect().width) || 460;
+    host.style.transform = 'none';   // 取消縮圖時的縮放，放大層用滿版
+    body.appendChild(host);
+    showZoom(s, '圖解');
+    // MathJax 排版完才量得到真實高度，排版後再算放大倍率
+    if (window.MathJax && MathJax.typesetPromise) {
+      MathJax.typesetPromise([body]).then(fitZoomHost).catch(fitZoomHost);
+    } else { typeset(body); setTimeout(fitZoomHost, 300); }
+  }
+  function closeZoom() {
+    const m = document.getElementById('zoomModal');
+    if (!m || m.classList.contains('hidden')) return;
+    if (zoomHost && zoomHostParent) {
+      // 還原放大層加上的行內樣式，否則回到投影片會殘留寬度與縮放
+      zoomHost.style.width = ''; zoomHost.style.margin = '';
+      zoomHost.style.flex = ''; zoomHost.style.height = '';
+      zoomHost.style.transform = ''; zoomHost.style.transformOrigin = '';
+      delete zoomHost.dataset.zoomBase;
+      zoomHostParent.insertBefore(zoomHost, zoomHostParent.firstChild);   // 把圖放回原視覺欄
+      zoomHost = null; zoomHostParent = null;
+    }
+    const body = document.getElementById('zoomBody');
+    if (body) { body.innerHTML = ''; body.style.minHeight = ''; }
+    m.classList.add('hidden');
+    document.getElementById('zoomBar').classList.add('hidden');
+    if (typeof clearPen === 'function') clearPen();   // 清掉講解時的筆跡
+    fitSlide();
+  }
+
+  // ---- DOM ----
+  const $ = id => document.getElementById(id);
+  const slideEl = $('slide');
+  const crumbEl = $('crumb');
+  const tocEl = $('toc');
+  const progFill = $('progressFill');
+  const progText = $('progressText');
+  const prevBtn = $('prevBtn');
+  const nextBtn = $('nextBtn');
+  const navUnitsBar = $('navUnitsBar');
+  const navActsBar = $('navActsBar');
+
+  // ---- 封面章節卡 ----
+  (function buildCover() {
+    const host = $('coverChapters');
+    if (!host) return;
+    DECK.forEach(c => {
+      const card = document.createElement('div');
+      card.className = 'cover-card';
+      card.style.setProperty('--ct', c.color);
+      const chapStartIdx = flat.findIndex(s => s.ch === c.ch);
+      const secItemsHtml = c.sections.map(sec => {
+        const parts = sec.split(' ');
+        const code = parts[0];
+        const name = parts.slice(1).join(' ') || code;
+        return `<div class="cc-sec-item cc-sec-link" data-sec="${sec}" title="點擊直達 ${sec}">
+          <span class="cc-sec-code">${code}</span>
+          <span class="cc-sec-name">${name}</span>
+        </div>`;
+      }).join('');
+
+      card.innerHTML = `
+        <div class="cc-header" title="點擊進入第 ${c.ch} 單元">
+          <div class="cc-num">第 ${c.ch} 單元</div>
+          <div class="cc-title">${c.title}</div>
+        </div>
+        <div class="cc-list">${secItemsHtml}</div>`;
+      card.style.cursor = 'pointer';
+      card.onclick = (e) => {
+        let targetIdx = chapStartIdx;
+        const link = e.target.closest('.cc-sec-link');
+        if (link) {
+          const secStr = link.dataset.sec;
+          const secCode = secStr.split(' ')[0];
+          const found = flat.findIndex(item => item.ch === c.ch && item.sec === secCode);
+          if (found !== -1) targetIdx = found;
+        }
+        $('cover').classList.add('hidden');
+        $('app').classList.remove('hidden');
+        fitPen();
+        go(targetIdx >= 0 ? targetIdx : 0);
+      };
+      host.appendChild(card);
+    });
+  })();
+
+  // ---- 頂部導航膠囊列 (單元與活動超連結) ----
+  function buildQuickNav() {
+    if (!navUnitsBar) return;
+    navUnitsBar.innerHTML = '';
+    const label = document.createElement('span');
+    label.className = 'nav-label';
+    label.textContent = '單元直達:';
+    navUnitsBar.appendChild(label);
+
+    DECK.forEach(c => {
+      const chapStartIdx = flat.findIndex(s => s.ch === c.ch);
+      const btn = document.createElement('button');
+      btn.className = 'nav-u-chip';
+      btn.dataset.ch = c.ch;
+      btn.dataset.idx = chapStartIdx;
+      btn.title = `第 ${c.ch} 單元：${c.title}`;
+      btn.innerHTML = `<b>U${c.ch}</b> ${c.title}`;
+      btn.onclick = () => go(chapStartIdx >= 0 ? chapStartIdx : 0);
+      navUnitsBar.appendChild(btn);
+    });
+  }
+
+  function updateQuickNav(s) {
+    if (!s) return;
+    const curCh = s.ch;
+    // 1. 高亮單元列
+    if (navUnitsBar) {
+      navUnitsBar.querySelectorAll('.nav-u-chip').forEach(btn => {
+        const isCur = +btn.dataset.ch === curCh;
+        btn.classList.toggle('active', isCur);
+        if (isCur) {
+          btn.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+        }
+      });
+    }
+
+    // 2. 更新活動列
+    if (navActsBar) {
+      navActsBar.innerHTML = '';
+      if (s.type === 'copyright') {
+        navActsBar.innerHTML = `<span class="nav-label">導航:</span><button class="nav-a-chip active">版權與教材聲明</button>`;
+        return;
+      }
+      const chapData = DECK.find(c => c.ch === curCh);
+      if (!chapData) return;
+
+      const label = document.createElement('span');
+      label.className = 'nav-label';
+      label.textContent = `第 ${curCh} 單元活動:`;
+      navActsBar.appendChild(label);
+
+      // 單元章首按鈕
+      const chapDividerIdx = flat.findIndex(item => item.ch === curCh && item.type === 'divider');
+      if (chapDividerIdx !== -1) {
+        const divBtn = document.createElement('button');
+        divBtn.className = `nav-a-chip ${s.type === 'divider' ? 'active' : ''}`;
+        divBtn.textContent = '單元首頁';
+        divBtn.onclick = () => go(chapDividerIdx);
+        navActsBar.appendChild(divBtn);
+      }
+
+      chapData.sections.forEach(secStr => {
+        const secCode = secStr.split(' ')[0]; // 如 "1-1"
+        const secStartIdx = flat.findIndex(item => item.ch === curCh && item.sec === secCode);
+        if (secStartIdx !== -1) {
+          const btn = document.createElement('button');
+          const isCurSec = s.sec === secCode;
+          btn.className = `nav-a-chip ${isCurSec ? 'active' : ''}`;
+          btn.title = secStr;
+          btn.textContent = secStr;
+          btn.onclick = () => go(secStartIdx);
+          navActsBar.appendChild(btn);
+          if (isCurSec) {
+            btn.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+          }
+        }
+      });
+    }
+  }
+
+  // ---- 目錄 ----
+  function buildTOC() {
+    tocEl.innerHTML = '';
+    DECK.forEach(chap => {
+      const wrap = document.createElement('div');
+      wrap.className = 'toc-chapter open';
+      wrap.style.setProperty('--ct', chap.color);
+      const head = document.createElement('div');
+      head.className = 'toc-chead';
+      head.innerHTML = `<span class="toc-dot"></span>第 ${chap.ch} 章　${chap.title}`;
+      head.onclick = () => wrap.classList.toggle('open');
+      wrap.appendChild(head);
+      const items = document.createElement('div');
+      items.className = 'toc-items';
+      flat.forEach((s, i) => {
+        if (s.type !== 'slide' || s.ch !== chap.ch) return;
+        const b = document.createElement('button');
+        b.className = 'toc-item';
+        b.dataset.i = i;
+        b.innerHTML = `<span class="ti-sec">${s.sec}</span>${renderTitle(s.title)}`;
+        b.onclick = () => { go(i); if (window.innerWidth <= 1080) tocEl.classList.remove('open'); };
+        items.appendChild(b);
+      });
+      wrap.appendChild(items);
+      tocEl.appendChild(wrap);
+    });
+
+    // TOC 底部新增版權聲明按鈕
+    const copyWrap = document.createElement('div');
+    copyWrap.className = 'toc-chapter open';
+    copyWrap.style.setProperty('--ct', '#0284c7');
+    const copyHead = document.createElement('div');
+    copyHead.className = 'toc-chead';
+    copyHead.innerHTML = `<span class="toc-dot"></span>© 教材來源與版權聲明`;
+    copyHead.onclick = () => { go(flat.length - 1); if (window.innerWidth <= 1080) tocEl.classList.remove('open'); };
+    copyWrap.appendChild(copyHead);
+    tocEl.appendChild(copyWrap);
+  }
+
+  function markTOC() {
+    tocEl.querySelectorAll('.toc-item').forEach(b => {
+      b.classList.toggle('active', +b.dataset.i === idx);
+    });
+  }
+
+  // ---- 渲染單頁 ----
+  function render() {
+    const s = flat[idx];
+    slideEl.style.setProperty('--ct', s.color);
+
+    if (s.type === 'divider') {
+      slideEl.className = 'slide divider';
+      slideEl.innerHTML = `
+        <div>
+          <div class="dv-num">第 ${s.ch} 章</div>
+          <div class="dv-title">${renderTitle(s.title)}</div>
+          <div class="dv-list">${s.sections.map(x => `<span class="dv-chip">${x}</span>`).join('')}</div>
+        </div>`;
+      const chapObj = DECK.find(c => c.ch === s.ch);
+      crumbEl.innerHTML = `
+        <button class="crumb-btn active" data-idx="${idx}">第 ${s.ch} 單元 ${chapObj ? chapObj.title : s.title}</button>
+        <span class="crumb-sep">/</span>
+        <span class="crumb-title">單元首頁</span>`;
+    } else if (s.type === 'copyright') {
+      slideEl.className = 'slide copyright-page';
+      slideEl.innerHTML = `
+        <div class="cp-card">
+          <div class="cp-header">
+            <span class="cp-badge">© 版權與教學聲明</span>
+            <h2 class="cp-title">康軒國小數學四上 視覺化教材網站</h2>
+          </div>
+          <div class="cp-grid">
+            <div class="cp-box">
+              <div class="cp-box-title">📘 教材內容與指標來源</div>
+              <ul class="cp-list">
+                <li>本視覺化教材對應 <b>108 課綱國小數學第 7 冊（四上）</b> 學習指標（N-4-1, N-4-2, S-4-1 等）。</li>
+                <li>單元章節、觀念進度與題型情境參考 <b>康軒文教事業（康軒版）國小四年級上冊數學課本與習作</b> 之架構設計。</li>
+              </ul>
+            </div>
+            <div class="cp-box">
+              <div class="cp-box-title">⚖️ 著作權與權利宣告</div>
+              <ul class="cp-list">
+                <li><b>視覺化動態教具與 Web 引擎</b>：感謝 <b>三師爸 (Sense Bar)</b> 分享視覺化動態教材技能，經<b>林敬修老師</b>修改技能後設計及開發。</li>
+                <li><b>課本品牌與原始內容權利</b>：康軒版課本與習作之原始文字、品牌與教材題型著作權歸原出版公司 <b>康軒文教事業股份有限公司</b> 所有。</li>
+              </ul>
+            </div>
+            <div class="cp-box">
+              <div class="cp-box-title">🎁 免費教育使用與授權條款</div>
+              <ul class="cp-list">
+                <li><b>非商業教育授權</b>：開放予全台國小教師、學生、家長與輔導員於學校課堂、公開課研討、線上教學及自主複習中<b>免費非商業使用</b>。</li>
+                <li><b>嚴禁商業盈利行為</b>：未經原作者與版權方書面授權，禁止任何形式之打包販售、付費轉載或商業盈利行為。</li>
+              </ul>
+            </div>
+            <div class="cp-box">
+              <div class="cp-box-title">🛠️ 引擎技術與致謝</div>
+              <ul class="cp-list">
+                <li><b>核心開發技術</b>：HTML5 / SVG / Vanilla CSS / ES6+ Dynamic Engine。</li>
+                <li><b>數學公式渲染</b>：感謝 MathJax (v3 es5 tex-svg) 開源數學引擎提供支援。</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      `;
+      crumbEl.innerHTML = `<span class="crumb-title">© 教材來源與版權聲明</span>`;
+    } else {
+      slideEl.className = 'slide';
+      // 左：概念欄
+      const info = document.createElement('div');
+      info.className = 'slide-info';
+      let html = `<div class="badge">第 ${s.ch} 章 · ${s.sec} ${s.secName || ''}</div>
+        <h2 class="slide-title">${renderTitle(s.title)}</h2>`;
+      if (s.formula) {
+        html += `<div class="formula">${s.formula.label ? `<div class="formula-label">${s.formula.label}</div>` : ''}$$${s.formula.tex}$$</div>`;
+      }
+      if (s.points && s.points.length) {
+        html += `<ul class="points">${s.points.map(p => `<li>${p}</li>`).join('')}</ul>`;
+      }
+      if (s.example) {
+        html += `<div class="example">
+          <div class="ex-head">範例<button class="ex-zoom" title="放大成整頁，方便用畫筆講解">🔍 放大</button></div>
+          <div class="ex-q">${s.example.q}</div>
+          <button class="ex-toggle">顯示解答</button>
+          <div class="ex-sol">
+            ${s.example.steps ? `<ol>${s.example.steps.map(t => `<li>${t}</li>`).join('')}</ol>` : ''}
+            ${s.example.ans ? `<div class="ex-ans">答：${s.example.ans}</div>` : ''}
+          </div>
+        </div>`;
+      }
+      info.innerHTML = '<div class="col-fit">' + html + '</div>';
+
+      // 右：視覺欄
+      const vis = document.createElement('div');
+      vis.className = 'slide-visual';
+      const host = document.createElement('div');
+      host.className = 'visual-host';
+      vis.appendChild(host);
+      if (s.caption) {
+        const cap = document.createElement('div');
+        cap.className = 'visual-caption';
+        cap.innerHTML = s.caption;
+        vis.appendChild(cap);
+      }
+      // 圖解「放大成整頁」按鈕（浮在視覺欄右上角）
+      const visZoom = document.createElement('button');
+      visZoom.className = 'vis-zoom';
+      visZoom.title = '放大成整頁，方便用畫筆講解';
+      visZoom.textContent = '🔍 放大';
+      visZoom.onclick = () => openVisualModal(s, host);
+      vis.appendChild(visZoom);
+
+      slideEl.innerHTML = '';
+      slideEl.appendChild(info);
+      slideEl.appendChild(vis);
+
+      // 視覺內容：字串 or 函式
+      if (typeof s.visual === 'function') {
+        try { s.visual(host); } catch (e) { host.innerHTML = '<p style="color:#e11d48">視覺載入失敗</p>'; console.error(e); }
+      } else {
+        host.innerHTML = s.visual || '';
+      }
+
+      // 範例展開
+      const tog = info.querySelector('.ex-toggle');
+      if (tog) {
+        const sol = info.querySelector('.ex-sol');
+        tog.onclick = () => {
+          sol.classList.toggle('show');
+          tog.textContent = sol.classList.contains('show') ? '收起解答' : '顯示解答';
+          // 展開/收起解答會改變概念欄高度 → 排版後重新縮放
+          if (window.MathJax && MathJax.typesetPromise) MathJax.typesetPromise([sol]).then(fitSlide).catch(fitSlide);
+          else fitSlide();
+        };
+      }
+      // 範例「放大成整頁」按鈕
+      const exZoom = info.querySelector('.ex-zoom');
+      if (exZoom) exZoom.onclick = () => openExampleModal(s);
+
+      const chapObj = DECK.find(c => c.ch === s.ch);
+      const chapStartIdx = flat.findIndex(item => item.ch === s.ch);
+      const secStartIdx = flat.findIndex(item => item.ch === s.ch && item.sec === s.sec);
+      crumbEl.innerHTML = `
+        <button class="crumb-btn" data-idx="${chapStartIdx}">第 ${s.ch} 單元 ${chapObj ? chapObj.title : ''}</button>
+        <span class="crumb-sep">/</span>
+        <button class="crumb-btn" data-idx="${secStartIdx}">${s.sec} ${s.secName || ''}</button>
+        <span class="crumb-sep">/</span>
+        <span class="crumb-title">${renderTitle(s.title)}</span>`;
+    }
+
+    // 綁定麵包屑按鈕跳轉
+    crumbEl.querySelectorAll('.crumb-btn').forEach(btn => {
+      btn.onclick = (e) => {
+        e.stopPropagation();
+        const targetIdx = +btn.dataset.idx;
+        if (!isNaN(targetIdx) && targetIdx >= 0) go(targetIdx);
+      };
+    });
+
+    // 更新頂部各單元與活動膠囊導航
+    updateQuickNav(s);
+
+    // 進度
+    progFill.style.width = ((idx + 1) / flat.length * 100) + '%';
+    progText.textContent = `${idx + 1} / ${flat.length}`;
+    prevBtn.disabled = idx === 0;
+    nextBtn.disabled = idx === flat.length - 1;
+    markTOC();
+
+    // MathJax（若尚未載入完成，typeset 會自動重試補上）；排版後自動縮放使整頁免捲動
+    typesetAndFit(slideEl);
+    slideEl.scrollTop = 0;
+    if (typeof clearPen === 'function') clearPen(); // 換頁清除筆跡
+  }
+
+  function go(i) {
+    closeZoom();
+    idx = Math.max(0, Math.min(flat.length - 1, i));
+    render();
+  }
+  function next() { if (idx < flat.length - 1) go(idx + 1); }
+  function prev() { if (idx > 0) go(idx - 1); }
+
+  // ---- 事件 ----
+  const app = $('app');
+  function toggleSidebar() {
+    if (window.innerWidth > 1080) app.classList.toggle('toc-collapsed');
+    else tocEl.classList.toggle('open');
+    // 版面寬度改變 → 重新縮放（延一格等 grid 重排完成）
+    requestAnimationFrame(fitSlide);
+  }
+  prevBtn.onclick = prev;
+  nextBtn.onclick = next;
+  $('tocToggle').onclick = toggleSidebar;
+  $('homeBtn').onclick = () => { app.classList.add('hidden'); $('cover').classList.remove('hidden'); };
+  $('startBtn').onclick = () => { $('cover').classList.add('hidden'); app.classList.remove('hidden'); fitPen(); render(); };
+
+  /* ================= 授課教具 ================= */
+  const canvas = $('penCanvas'), penCtx = canvas.getContext('2d');
+  const laserDot = $('laserDot');
+  let laserOn = false, penOn = false, drawing = false, erasing = false, penColor = '#e11d48', lastPt = null;
+
+  // 雷射拖尾：獨立畫布，畫出會隨時間淡出的紅色軌跡（不影響畫筆畫布）
+  const laserCanvas = document.createElement('canvas');
+  laserCanvas.className = 'laser-canvas';
+  document.body.appendChild(laserCanvas);
+  const lctx = laserCanvas.getContext('2d');
+  let laserPts = [];           // 近期軌跡點 {x, y, t}
+  let laserRAF = null;
+  const LASER_LIFE = 1600;     // 每段筆跡殘留時間（毫秒）→ 之後淡出消失
+  function drawLaserTrail() {
+    syncLaserCanvas();
+    const now = performance.now();
+    laserPts = laserPts.filter(p => now - p.t < LASER_LIFE);
+    lctx.clearRect(0, 0, laserCanvas.width, laserCanvas.height);
+    for (let i = 1; i < laserPts.length; i++) {
+      const a = laserPts[i - 1], b = laserPts[i];
+      const alpha = Math.max(0, 1 - (now - b.t) / LASER_LIFE);   // 越新越濃，隨時間淡出
+      lctx.strokeStyle = 'rgba(255,42,42,' + (0.6 * alpha).toFixed(3) + ')';
+      lctx.lineWidth = 3 + 5 * alpha;
+      lctx.beginPath(); lctx.moveTo(a.x, a.y); lctx.lineTo(b.x, b.y); lctx.stroke();
+    }
+    if (laserOn || laserPts.length > 1) laserRAF = requestAnimationFrame(drawLaserTrail);
+    else { lctx.clearRect(0, 0, laserCanvas.width, laserCanvas.height); laserRAF = null; }
+  }
+
+  function fitPen() {
+    const w = window.innerWidth, h = window.innerHeight, dpr = window.devicePixelRatio || 1;
+    if (canvas._w === w && canvas._h === h) return; // 尺寸未變就不重設，避免清掉筆跡
+    canvas._w = w; canvas._h = h;
+    canvas.width = Math.round(w * dpr);
+    canvas.height = Math.round(h * dpr);
+    canvas.style.width = w + 'px';
+    canvas.style.height = h + 'px';
+    penCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    penCtx.lineCap = 'round'; penCtx.lineJoin = 'round';
+  }
+  // 雷射畫布尺寸自我校正（不受 fitPen 的 early-return 影響；尺寸相符時為 no-op）
+  function syncLaserCanvas() {
+    const w = window.innerWidth, h = window.innerHeight, dpr = window.devicePixelRatio || 1;
+    const cw = Math.round(w * dpr), ch = Math.round(h * dpr);
+    if (laserCanvas.width === cw && laserCanvas.height === ch) return;
+    laserCanvas.width = cw; laserCanvas.height = ch;
+    laserCanvas.style.width = w + 'px'; laserCanvas.style.height = h + 'px';
+    lctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    lctx.lineCap = 'round'; lctx.lineJoin = 'round';
+  }
+  function clearPen() { if (penCtx) penCtx.clearRect(0, 0, canvas.width, canvas.height); }
+
+  function setLaser(on) {
+    laserOn = on;
+    if (on) setPen(false);
+    app.classList.toggle('laser-on', on);
+    laserDot.classList.toggle('hidden', !on);
+    $('dkLaser').classList.toggle('active', on);
+    if (on) { syncLaserCanvas(); if (!laserRAF) laserRAF = requestAnimationFrame(drawLaserTrail); }
+    // 關閉時不清點：讓已畫出的拖尾自然淡出後停止
+  }
+  function setPen(on) {
+    penOn = on;
+    if (on) setLaser(false);
+    app.classList.toggle('pen-on', on);
+    canvas.style.pointerEvents = on ? 'auto' : 'none';
+    $('dkPen').classList.toggle('active', on);
+    $('dkColors').classList.toggle('hidden', !on);
+  }
+
+  // 雷射點跟隨 + 記錄拖尾軌跡
+  document.addEventListener('mousemove', e => {
+    if (laserOn) {
+      laserDot.style.left = e.clientX + 'px'; laserDot.style.top = e.clientY + 'px';
+      laserPts.push({ x: e.clientX, y: e.clientY, t: performance.now() });
+      if (laserPts.length > 600) laserPts.shift();
+    }
+  });
+
+  // 畫筆繪製（滑鼠＋觸控）
+  const ptOf = e => { const t = e.touches ? e.touches[0] : e; return { x: t.clientX, y: t.clientY }; };
+  function penStart(e) { if (!penOn) return; drawing = true; lastPt = ptOf(e); e.preventDefault(); }
+  function penMove(e) {
+    if (!penOn || !drawing) return;
+    const p = ptOf(e);
+    penCtx.globalCompositeOperation = erasing ? 'destination-out' : 'source-over';
+    penCtx.strokeStyle = penColor;
+    penCtx.lineWidth = erasing ? 26 : 3.6;
+    penCtx.beginPath(); penCtx.moveTo(lastPt.x, lastPt.y); penCtx.lineTo(p.x, p.y); penCtx.stroke();
+    lastPt = p; e.preventDefault();
+  }
+  function penEnd() { drawing = false; }
+  canvas.addEventListener('mousedown', penStart);
+  canvas.addEventListener('mousemove', penMove);
+  window.addEventListener('mouseup', penEnd);
+  canvas.addEventListener('touchstart', penStart, { passive: false });
+  canvas.addEventListener('touchmove', penMove, { passive: false });
+  window.addEventListener('touchend', penEnd);
+
+  // 工具列按鈕
+  $('dkSidebar').onclick = toggleSidebar;
+  $('dkPrev').onclick = prev;
+  $('dkNext').onclick = next;
+  $('dkLaser').onclick = () => setLaser(!laserOn);
+  $('dkPen').onclick = () => setPen(!penOn);
+  $('dkClear').onclick = clearPen;
+  $('dkErase').onclick = () => {
+    erasing = !erasing;
+    $('dkErase').classList.toggle('active', erasing);
+    if (erasing && !penOn) setPen(true);
+  };
+  document.querySelectorAll('.dcolor').forEach(b => {
+    b.onclick = () => {
+      penColor = b.dataset.c; erasing = false;
+      $('dkErase').classList.remove('active');
+      document.querySelectorAll('.dcolor').forEach(x => x.classList.toggle('active', x === b));
+      if (!penOn) setPen(true);
+    };
+  });
+  $('dkFull').onclick = () => {
+    if (!document.fullscreenElement) (document.documentElement.requestFullscreen && document.documentElement.requestFullscreen());
+    else document.exitFullscreen();
+  };
+  window.addEventListener('resize', () => { fitPen(); fitSlide(); fitZoomHost(); });
+  // 拖動滑桿／步驟器時，說明文字行數可能改變（例如步驟說明從一行變兩行），
+  // 導致視覺欄需要重新量高縮放；用 rAF 去抖，避免拖曳過程重複計算
+  let _refitRAF = null;
+  slideEl.addEventListener('input', () => {
+    if (_refitRAF) return;
+    _refitRAF = requestAnimationFrame(() => { _refitRAF = null; fitSlide(); });
+  });
+  fitPen();
+
+  document.addEventListener('keydown', e => {
+    if ($('app').classList.contains('hidden')) {
+      if (e.key === 'Enter' || e.key === ' ') { $('startBtn').click(); }
+      return;
+    }
+    if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') { e.preventDefault(); next(); }
+    else if (e.key === 'ArrowLeft' || e.key === 'PageUp') { e.preventDefault(); prev(); }
+    else if (e.key === 'Home') go(0);
+    else if (e.key === 'End') go(flat.length - 1);
+    else if (e.key === 'Escape') { closeZoom(); setLaser(false); setPen(false); }
+    else if (e.key === 'l' || e.key === 'L') setLaser(!laserOn);
+    else if (e.key === 'p' || e.key === 'P') setPen(!penOn);
+    else if (e.key === 'c' || e.key === 'C') clearPen();
+  });
+
+  const copyToggle = $('copyToggle');
+  if (copyToggle) copyToggle.onclick = () => go(flat.length - 1);
+  const coverCopyBtn = $('coverCopyBtn');
+  if (coverCopyBtn) {
+    coverCopyBtn.onclick = () => {
+      $('cover').classList.add('hidden');
+      $('app').classList.remove('hidden');
+      fitPen();
+      go(flat.length - 1);
+    };
+  }
+
+  buildTOC();
+  buildQuickNav();
+
+  // 深連結：#present 直接進入簡報；#p=N 直接跳到第 N 頁
+  (function bootFromHash() {
+    const hash = location.hash || '';
+    const m = hash.match(/#p=(\d+)/);
+    if (hash === '#present' || m) {
+      $('cover').classList.add('hidden');
+      $('app').classList.remove('hidden');
+      fitPen();
+      go(m ? +m[1] : 0);
+    }
+  })();
+  // 不自動 render，等按「開始複習」；但若直接想看也可預先 render
+})();

@@ -33,7 +33,7 @@ window.DECK = window.DECK || [];
         formula: { label: '千的組成', tex: '100 \\times 10 = 1000' },
         visual: (h) => {
           h.innerHTML = `<div style="width:100%;text-align:center">
-            <svg viewBox="0 0 400 210" style="max-width:100%">
+            <svg viewBox="0 0 400 215" style="max-width:100%">
               <g class="stackg"></g>
             </svg>
             <div class="ictrl" style="display:flex; flex-wrap:wrap; justify-content:center; gap:8px;">
@@ -50,7 +50,7 @@ window.DECK = window.DECK || [];
             sl.value = n;
             numv.textContent = n;
             totalv.textContent = n * 100;
-            stackg.innerHTML = SV.hundredToThousandStack({ x: 30, y: 75, n: n, s: 75, color: '#2563eb' });
+            stackg.innerHTML = SV.hundredToThousandStack({ x: 28, y: 106, n: n, s: 75, color: '#2563eb' });
           };
 
           sl.oninput = () => update(+sl.value);
@@ -207,6 +207,12 @@ window.DECK = window.DECK || [];
           h.innerHTML = `
             <div style="width:100%; font-family:sans-serif;">
               <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:10px;" id="zeroCards">
+                ${EXAMPLES.map((ex, idx) => `
+                  <div class="zero-card-btn" data-card="${idx}" style="background:#fff; border:2px solid #cbd5e1; border-radius:10px; padding:10px; text-align:center; cursor:pointer; transition:all 0.2s;">
+                    <div style="font-size:24px; font-weight:900; color:#0f172a; letter-spacing:4px;">${ex.num}</div>
+                    <div style="font-size:12px; color:#64748b; margin-top:4px; font-weight:800;">點擊查看讀法</div>
+                  </div>
+                `).join('')}
               </div>
               <div id="zeroDetail" style="background:#f0f9ff; border:2px solid #0284c7; border-radius:12px; padding:12px; min-height:80px; display:none; text-align:center;"></div>
             </div>
@@ -215,64 +221,53 @@ window.DECK = window.DECK || [];
           const cardsDiv = h.querySelector('#zeroCards');
           const detail = h.querySelector('#zeroDetail');
 
-          EXAMPLES.forEach((ex, idx) => {
-            const card = document.createElement('div');
-            card.style.cssText = 'background:#fff; border:2px solid #cbd5e1; border-radius:10px; padding:10px; text-align:center; cursor:pointer; transition:all 0.2s;';
-            card.innerHTML = `
-              <div style="font-size:24px; font-weight:900; color:#0f172a; letter-spacing:4px;" id="numDisp${idx}">${ex.num}</div>
-              <div style="font-size:12px; color:#64748b; margin-top:4px; font-weight:800;">點擊查看讀法</div>
-            `;
-            card.onclick = () => {
-              // 重置所有卡片樣式
-              cardsDiv.querySelectorAll('div[data-card]').forEach(c => {
-                c.style.borderColor = '#cbd5e1'; c.style.background = '#fff';
-              });
-              card.style.borderColor = '#0284c7';
-              card.style.background = '#eff6ff';
-              selected = idx;
+          const showCard = (idx) => {
+            const ex = EXAMPLES[idx];
+            cardsDiv.querySelectorAll('.zero-card-btn').forEach((c, i) => {
+              const isCur = (i === idx);
+              c.style.borderColor = isCur ? '#0284c7' : '#cbd5e1';
+              c.style.background = isCur ? '#eff6ff' : '#fff';
+            });
 
-              // 建立高亮版數字
-              let highlighted = '';
-              const digits = ex.num.split('');
-              const zeroPositions = ex.zeros.map(z => z.pos);
-              const zeroTypes = {};
-              ex.zeros.forEach(z => { zeroTypes[z.pos] = z.type; });
+            // 建立高亮版數字
+            let highlighted = '';
+            const digits = ex.num.split('');
+            const zeroPositions = ex.zeros.map(z => z.pos);
+            const zeroTypes = {};
+            ex.zeros.forEach(z => { zeroTypes[z.pos] = z.type; });
 
-              digits.forEach((d, i) => {
-                if (d === '0' && zeroPositions.includes(i)) {
-                  const type = zeroTypes[i];
-                  if (type === 'mid') {
-                    // 中間零：紅色高亮（要讀）
-                    highlighted += `<span style="color:#e11d48; font-size:28px; font-weight:900; background:#fee2e2; border-radius:6px; padding:0 4px;">0</span>`;
-                  } else {
-                    // 末尾零：灰色劃線（不讀）
-                    highlighted += `<span style="color:#94a3b8; font-size:28px; font-weight:900; text-decoration:line-through; background:#f1f5f9; border-radius:6px; padding:0 4px;">0</span>`;
-                  }
+            digits.forEach((d, i) => {
+              if (d === '0' && zeroPositions.includes(i)) {
+                const type = zeroTypes[i];
+                if (type === 'mid') {
+                  highlighted += `<span style="color:#e11d48; font-size:28px; font-weight:900; background:#fee2e2; border-radius:6px; padding:0 4px;">0</span>`;
                 } else {
-                  highlighted += `<span style="font-size:28px; font-weight:900; color:#0f172a;">${d}</span>`;
+                  highlighted += `<span style="color:#94a3b8; font-size:28px; font-weight:900; text-decoration:line-through; background:#f1f5f9; border-radius:6px; padding:0 4px;">0</span>`;
                 }
-              });
+              } else {
+                highlighted += `<span style="font-size:28px; font-weight:900; color:#0f172a;">${d}</span>`;
+              }
+            });
 
-              const midZeros = ex.zeros.filter(z => z.type === 'mid');
-              const endZeros = ex.zeros.filter(z => z.type === 'end');
+            const midZeros = ex.zeros.filter(z => z.type === 'mid');
+            const endZeros = ex.zeros.filter(z => z.type === 'end');
 
-              let tips = '';
-              if (midZeros.length > 0) tips += `<div style="color:#e11d48; font-weight:800; font-size:13px; margin-top:4px;">🔴 紅色的 0 → 要讀「零」</div>`;
-              if (endZeros.length > 0) tips += `<div style="color:#64748b; font-weight:800; font-size:13px; margin-top:2px;">⚫ 劃線的 0 → 末尾不讀</div>`;
+            let tips = '';
+            if (midZeros.length > 0) tips += `<div style="color:#e11d48; font-weight:800; font-size:13px; margin-top:4px;">🔴 紅色的 0 → 要讀「零」</div>`;
+            if (endZeros.length > 0) tips += `<div style="color:#64748b; font-weight:800; font-size:13px; margin-top:2px;">⚫ 劃線的 0 → 末尾不讀</div>`;
 
-              detail.style.display = 'block';
-              detail.innerHTML = `
-                <div style="margin-bottom:6px;">${highlighted}</div>
-                <div style="font-size:18px; font-weight:900; color:#0284c7; margin:6px 0;">讀作：${ex.reading}</div>
-                ${tips}
-              `;
-            };
-            card.setAttribute('data-card', idx);
-            cardsDiv.appendChild(card);
+            detail.style.display = 'block';
+            detail.innerHTML = `
+              <div style="margin-bottom:6px;">${highlighted}</div>
+              <div style="font-size:18px; font-weight:900; color:#0284c7; margin:6px 0;">讀作：${ex.reading}</div>
+              ${tips}
+            `;
+          };
+
+          cardsDiv.querySelectorAll('.zero-card-btn').forEach((card, idx) => {
+            card.onclick = () => showCard(idx);
           });
-
-          // 預設點選第一張
-          cardsDiv.children[0].click();
+          showCard(0);
         },
         caption: '觀察不同位置的「0」，讀法大不相同！',
         example: {

@@ -53,6 +53,15 @@
   }
   function fitSlide() {
     if (!slideEl || slideEl.classList.contains('divider') || slideEl.classList.contains('copyright-page')) return;
+    if (window.innerWidth <= 1080) {
+      // 窄螢幕或直立平板（單欄直向捲動佈局）：
+      // 確保重置 CSS transform scale，讓內容以 100% 自然尺寸清晰顯示，支援自然滑動
+      const info = slideEl.querySelector('.slide-info .col-fit');
+      if (info) { info.style.transform = 'none'; info.style.width = '100%'; }
+      const host = slideEl.querySelector('.slide-visual .visual-host');
+      if (host) { host.style.transform = 'none'; host.style.width = '100%'; }
+      return;
+    }
     const info = slideEl.querySelector('.slide-info');
     if (info) fitEl(info, info.querySelector('.col-fit'));
     const vis = slideEl.querySelector('.slide-visual');
@@ -203,20 +212,132 @@
   const progText = $('progressText');
   const prevBtn = $('prevBtn');
   const nextBtn = $('nextBtn');
+  const navUnitsBar = $('navUnitsBar');
+  const navActsBar = $('navActsBar');
 
   // ---- 封面章節卡 ----
   (function buildCover() {
     const host = $('coverChapters');
+    if (!host) return;
     DECK.forEach(c => {
       const card = document.createElement('div');
       card.className = 'cover-card';
       card.style.setProperty('--ct', c.color);
-      card.innerHTML = `<div class="cc-num">第 ${c.ch} 章</div>
-        <div class="cc-title">${c.title}</div>
-        <div class="cc-list">${c.sections.join('　')}</div>`;
+      const chapStartIdx = flat.findIndex(s => s.ch === c.ch);
+      const secItemsHtml = c.sections.map(sec => {
+        const parts = sec.split(' ');
+        const code = parts[0];
+        const name = parts.slice(1).join(' ') || code;
+        return `<div class="cc-sec-item cc-sec-link" data-sec="${sec}" title="點擊直達 ${sec}">
+          <span class="cc-sec-code">${code}</span>
+          <span class="cc-sec-name">${name}</span>
+        </div>`;
+      }).join('');
+
+      card.innerHTML = `
+        <div class="cc-header" title="點擊進入第 ${c.ch} 單元">
+          <div class="cc-num">第 ${c.ch} 單元</div>
+          <div class="cc-title">${c.title}</div>
+        </div>
+        <div class="cc-list">${secItemsHtml}</div>`;
+      card.style.cursor = 'pointer';
+      card.onclick = (e) => {
+        let targetIdx = chapStartIdx;
+        const link = e.target.closest('.cc-sec-link');
+        if (link) {
+          const secStr = link.dataset.sec;
+          const secCode = secStr.split(' ')[0];
+          const found = flat.findIndex(item => item.ch === c.ch && item.sec === secCode);
+          if (found !== -1) targetIdx = found;
+        }
+        $('cover').classList.add('hidden');
+        $('app').classList.remove('hidden');
+        fitPen();
+        go(targetIdx >= 0 ? targetIdx : 0);
+      };
       host.appendChild(card);
     });
   })();
+
+  // ---- 頂部導航膠囊列 (單元與活動超連結) ----
+  function buildQuickNav() {
+    if (!navUnitsBar) return;
+    navUnitsBar.innerHTML = '';
+    const label = document.createElement('span');
+    label.className = 'nav-label';
+    label.textContent = '單元直達:';
+    navUnitsBar.appendChild(label);
+
+    DECK.forEach(c => {
+      const chapStartIdx = flat.findIndex(s => s.ch === c.ch);
+      const btn = document.createElement('button');
+      btn.className = 'nav-u-chip';
+      btn.dataset.ch = c.ch;
+      btn.dataset.idx = chapStartIdx;
+      btn.title = `第 ${c.ch} 單元：${c.title}`;
+      btn.innerHTML = `<b>U${c.ch}</b> ${c.title}`;
+      btn.onclick = () => go(chapStartIdx >= 0 ? chapStartIdx : 0);
+      navUnitsBar.appendChild(btn);
+    });
+  }
+
+  function updateQuickNav(s) {
+    if (!s) return;
+    const curCh = s.ch;
+    // 1. 高亮單元列
+    if (navUnitsBar) {
+      navUnitsBar.querySelectorAll('.nav-u-chip').forEach(btn => {
+        const isCur = +btn.dataset.ch === curCh;
+        btn.classList.toggle('active', isCur);
+        if (isCur) {
+          btn.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+        }
+      });
+    }
+
+    // 2. 更新活動列
+    if (navActsBar) {
+      navActsBar.innerHTML = '';
+      if (s.type === 'copyright') {
+        navActsBar.innerHTML = `<span class="nav-label">導航:</span><button class="nav-a-chip active">版權與教材聲明</button>`;
+        return;
+      }
+      const chapData = DECK.find(c => c.ch === curCh);
+      if (!chapData) return;
+
+      const label = document.createElement('span');
+      label.className = 'nav-label';
+      label.textContent = `第 ${curCh} 單元活動:`;
+      navActsBar.appendChild(label);
+
+      // 單元章首按鈕
+      const chapDividerIdx = flat.findIndex(item => item.ch === curCh && item.type === 'divider');
+      if (chapDividerIdx !== -1) {
+        const divBtn = document.createElement('button');
+        divBtn.className = `nav-a-chip ${s.type === 'divider' ? 'active' : ''}`;
+        divBtn.textContent = '單元首頁';
+        divBtn.onclick = () => go(chapDividerIdx);
+        navActsBar.appendChild(divBtn);
+      }
+
+      chapData.sections.forEach(secStr => {
+        const secCode = secStr.split(' ')[0]; // 如 "1-1"
+        const secStartIdx = flat.findIndex(item => item.ch === curCh && item.sec === secCode);
+        if (secStartIdx !== -1) {
+          const btn = document.createElement('button');
+          const isCurSec = s.sec === secCode;
+          btn.className = `nav-a-chip ${isCurSec ? 'active' : ''}`;
+          btn.title = secStr;
+          btn.textContent = secStr;
+          btn.onclick = () => go(secStartIdx);
+          navActsBar.appendChild(btn);
+          if (isCurSec) {
+            btn.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+          }
+        }
+      });
+    }
+  }
 
   // ---- 目錄 ----
   function buildTOC() {
@@ -276,21 +397,25 @@
           <div class="dv-title">${renderTitle(s.title)}</div>
           <div class="dv-list">${s.sections.map(x => `<span class="dv-chip">${x}</span>`).join('')}</div>
         </div>`;
-      crumbEl.innerHTML = `第 ${s.ch} 章　<b>${renderTitle(s.title)}</b>`;
+      const chapObj = DECK.find(c => c.ch === s.ch);
+      crumbEl.innerHTML = `
+        <button class="crumb-btn active" data-idx="${idx}">第 ${s.ch} 單元 ${chapObj ? chapObj.title : s.title}</button>
+        <span class="crumb-sep">/</span>
+        <span class="crumb-title">單元首頁</span>`;
     } else if (s.type === 'copyright') {
       slideEl.className = 'slide copyright-page';
       slideEl.innerHTML = `
         <div class="cp-card">
           <div class="cp-header">
             <span class="cp-badge">© 版權與教學聲明</span>
-            <h2 class="cp-title">康軒國小數學三上 全冊視覺化複習網站</h2>
+            <h2 class="cp-title">${document.title || '國小數學視覺化教材網站'}</h2>
           </div>
           <div class="cp-grid">
             <div class="cp-box">
               <div class="cp-box-title">📘 教材內容與指標來源</div>
               <ul class="cp-list">
-                <li>本視覺化教材對應 <b>108 課綱國小數學第 5 冊（三上）</b> 學習指標（n-II-1, s-II-1 等）。</li>
-                <li>單元章節、觀念進度與題型情境參考 <b>康軒文教事業（康軒版）國小三年級上冊數學課本與習作</b> 之架構設計。</li>
+                <li>本視覺化教材對應 <b>108 課綱國小數學第 7 冊（四上）</b> 學習指標（N-4-1, N-4-2, S-4-1 等）。</li>
+                <li>單元章節、觀念進度與題型情境參考 <b>康軒文教事業（康軒版）國小四年級上冊數學課本與習作</b> 之架構設計。</li>
               </ul>
             </div>
             <div class="cp-box">
@@ -317,7 +442,7 @@
           </div>
         </div>
       `;
-      crumbEl.innerHTML = `<b>© 教材來源與版權聲明</b>`;
+      crumbEl.innerHTML = `<span class="crumb-title">© 教材來源與版權聲明</span>`;
     } else {
       slideEl.className = 'slide';
       // 左：概念欄
@@ -391,8 +516,28 @@
       const exZoom = info.querySelector('.ex-zoom');
       if (exZoom) exZoom.onclick = () => openExampleModal(s);
 
-      crumbEl.innerHTML = `第 ${s.ch} 章 · ${s.sec} <b>${renderTitle(s.title)}</b>`;
+      const chapObj = DECK.find(c => c.ch === s.ch);
+      const chapStartIdx = flat.findIndex(item => item.ch === s.ch);
+      const secStartIdx = flat.findIndex(item => item.ch === s.ch && item.sec === s.sec);
+      crumbEl.innerHTML = `
+        <button class="crumb-btn" data-idx="${chapStartIdx}">第 ${s.ch} 單元 ${chapObj ? chapObj.title : ''}</button>
+        <span class="crumb-sep">/</span>
+        <button class="crumb-btn" data-idx="${secStartIdx}">${s.sec} ${s.secName || ''}</button>
+        <span class="crumb-sep">/</span>
+        <span class="crumb-title">${renderTitle(s.title)}</span>`;
     }
+
+    // 綁定麵包屑按鈕跳轉
+    crumbEl.querySelectorAll('.crumb-btn').forEach(btn => {
+      btn.onclick = (e) => {
+        e.stopPropagation();
+        const targetIdx = +btn.dataset.idx;
+        if (!isNaN(targetIdx) && targetIdx >= 0) go(targetIdx);
+      };
+    });
+
+    // 更新頂部各單元與活動膠囊導航
+    updateQuickNav(s);
 
     // 進度
     progFill.style.width = ((idx + 1) / flat.length * 100) + '%';
@@ -590,6 +735,7 @@
   }
 
   buildTOC();
+  buildQuickNav();
 
   // 深連結：#present 直接進入簡報；#p=N 直接跳到第 N 頁
   (function bootFromHash() {

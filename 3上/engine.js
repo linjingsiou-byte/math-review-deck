@@ -219,10 +219,16 @@
       const secHtml = c.sections.map(secStr => {
         const secStartIdx = flat.findIndex(s => s.ch === c.ch && s.type === 'slide' && (secStr.includes(s.sec) || (s.sec && secStr.startsWith(s.sec))));
         const targetIdx = secStartIdx !== -1 ? secStartIdx : chapStartIdx;
-        return `<span class="cc-sec-link" data-idx="${targetIdx}">${secStr}</span>`;
-      }).join('　');
+        const parts = secStr.split(' ');
+        const code = parts[0];
+        const name = parts.slice(1).join(' ') || code;
+        return `<div class="cc-sec-item cc-sec-link" data-idx="${targetIdx}" title="點擊直達 ${secStr}">
+          <span class="cc-sec-code">${code}</span>
+          <span class="cc-sec-name">${name}</span>
+        </div>`;
+      }).join('');
 
-      card.innerHTML = `<div class="cc-header" data-idx="${chapStartIdx}">
+      card.innerHTML = `<div class="cc-header" data-idx="${chapStartIdx}" title="點擊進入第 ${c.ch} 章">
           <div class="cc-num">第 ${c.ch} 章</div>
           <div class="cc-title">${c.title}</div>
         </div>

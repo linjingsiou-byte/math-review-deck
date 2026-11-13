@@ -30,13 +30,19 @@
 
   <!-- 主體 -->
   <div id="app" class="app hidden">
-    <!-- 頂部列 -->
+    <!-- 頂部列（含各單元各活動超連結快速導航） -->
     <header class="topbar">
-      <button class="home-btn" id="homeBtn" title="回封面">✦ {{HOME_LABEL}}</button>
-      <div class="crumb" id="crumb"></div>
-      <div class="top-actions">
-        <button class="ghost-btn" id="tocToggle" title="目錄">☰ 目錄</button>
+      <div class="topbar-main">
+        <button class="home-btn" id="homeBtn" title="回封面">✦ {{HOME_LABEL}}</button>
+        <div class="crumb" id="crumb"></div>
+        <div class="top-actions">
+          <button class="ghost-btn" id="tocToggle" title="目錄">☰ 目錄</button>
+        </div>
       </div>
+      <nav class="topbar-nav" id="topbarNav">
+        <div class="nav-units-bar" id="navUnitsBar"></div>
+        <div class="nav-acts-bar" id="navActsBar"></div>
+      </nav>
     </header>
 
     <div class="body">
